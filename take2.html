@@ -18,7 +18,7 @@
       }
       #content-pane {
         float: right;
-        width: 37%;
+        /*width: 37%;*/
         /*padding-left: 2%;
 				padding-top: 3%;*/
 				color: Black;
@@ -54,6 +54,10 @@ var destinations = [];
 var destinations2 = [];
 var xloc = 0;
 var yloc = 0;
+var callBacksPerformed = 0;
+var callBacks = 2;
+
+var locList = new locations();
 //for (i=0; i<loc.length; i++) {
 //for (i=0; i<5; i++) {
 //	xloc = (loc[i].childNodes[0].childNodes[0].nodeValue);
@@ -104,6 +108,57 @@ function initialize() {
 	calculateDistances(destinations2);
 }
 
+function locations() {
+	this.endpoints = [];
+	this.endpointAddresses = [];
+	this.index = 0;
+	this.origin = 0;
+
+	this.addPlaces = function(response) {
+		console.log("In addPlaces");
+	  var origins = response.originAddresses;	
+		this.origin = origins[0];
+		var destinations = response.destinationAddresses;
+		var results = response.rows[0].elements;
+		for (var j = 0; j < results.length; j++) {
+			this.endpoints[this.index] = results[j];
+			this.endpointAddresses[this.index] = destinations[j]; //still need to sort these!!
+			console.log("destination is " + destinations[j]);
+			this.index = this.index + 1;
+			console.log("working");
+		}
+		callBacksPerformed++;
+		console.log("callBacks is " + callBacksPerformed);
+		if (callBacksPerformed == callBacks) {
+			this.sortPlaces();
+			console.log("sorting done");
+			this.logDistances();
+			//logDistances(self);	
+		}
+	}
+
+	this.sortPlaces = function() {
+		if (this.index > 0){
+			this.endpoints.sort(responseCompare);
+		}	
+		else{
+			console.log("Error. Object had no endpoints");
+		}
+//		for (i=0; i<this.endpoints.length; i++) {
+//			console.log(this.endpoints[i]);
+//		}
+	}
+
+	this.logDistances = function() {
+		for (i=0; i<this.endpoints.length; i++) {
+			outputDiv.innerHTML += this.origin + ' to ' + this.endpointAddresses[i]
+					+ ': ' + this.endpoints[i].distance.text + ' in '
+					+ this.endpoints[i].duration.text + '<br>';
+		}
+	}
+}
+
+
 function calculateDistances(input) {
   var service = new google.maps.DistanceMatrixService();
   service.getDistanceMatrix(
@@ -123,20 +178,21 @@ function callback(response, status) {
   } else {
     var origins = response.originAddresses;
     var destinations = response.destinationAddresses;
-		response.rows[0].elements.sort(responseCompare);
+		//response.rows[0].elements.sort(responseCompare);
 
-		console.log("origins length is " + origins.length);
-    for (var i = 0; i < origins.length; i++) {
-      var results = response.rows[i].elements;
-      //addMarker(origins[i], false);
-      for (var j = 0; j < results.length; j++) {
-				console.log("length is " + results[j].distance.text);
-        //addMarker(destinations[j], true);
-        outputDiv.innerHTML += origins[i] + ' to ' + destinations[j]
-            + ': ' + results[j].distance.text + ' in '
-            + results[j].duration.text + '<br>';
-      }
-    }
+		locList.addPlaces(response);
+
+		//console.log("origins length is " + origins.length);
+//    for (var i = 0; i < origins.length; i++) {
+//      var results = response.rows[i].elements;
+//      //addMarker(origins[i], false);
+//      for (var j = 0; j < results.length; j++) {
+//        //addMarker(destinations[j], true);
+//        outputDiv.innerHTML += origins[i] + ' to ' + destinations[j]
+//            + ': ' + results[j].distance.text + ' in '
+//            + results[j].duration.text + '<br>';
+//      }
+//    }
   }
 }
 
@@ -146,18 +202,13 @@ function responseCompare(a,b) {
 	//console.log(text[0]);
 	var aDis = atext[0];
 	var bDis = btext[0];
-  console.log("blah"+aDis+"blah");
-  console.log("blah"+bDis+"blah");
 
 	if (aDis < bDis){
-		console.log("less than");
 		return -1;
 	}
 	if (aDis > bDis){
-		console.log("greater than");
 		return 1;
 	}
-	console.log("equal");
 	return 0;
 }
 
