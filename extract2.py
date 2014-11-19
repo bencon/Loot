@@ -2,6 +2,7 @@ import xml.etree.cElementTree as ET
 import requests
 import re
 from bs4 import BeautifulSoup
+#from BeautifulSoup import *
 
 r = requests.get('https://philadelphia.craigslist.org/zip/index.rss')
 print r.status_code
@@ -10,7 +11,7 @@ print r.headers['content-type']
 soup = BeautifulSoup(r.text, 'xml')
 #print (soup.prettify())
 
-#print soup.link
+print soup.link
 #print soup
 links = []
 print "start"
@@ -29,7 +30,8 @@ for link in links:
 		#print "Yes"
 		newSoup = BeautifulSoup(r.text)
 		for link in newSoup.find_all('a'):
-			if "maps.google.com" in link.get('href'):
+			url = link.get('href')
+			if (url and "maps.google.com" in link.get('href')):
 				#print (link.get('href'))
 				#search = re.search(
 				for a in (link.get('href')).split('/'):
