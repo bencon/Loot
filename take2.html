@@ -54,10 +54,20 @@ var destinations = [];
 var destinations2 = [];
 var xloc = 0;
 var yloc = 0;
-var callBacksPerformed = 0;
-var callBacks = 2;
+var addPlacesCalls = 0;
+var numberOfCallbacksNeeded = 2;
 
+/*****************************************************
+*
+Main Application Code
+*
+*****************************************************/
+
+// initialize and instance of the locations class
 var locList = new locations();
+
+// Now parse our coords.xml file to create an array structure of coordinates
+
 //for (i=0; i<loc.length; i++) {
 //for (i=0; i<5; i++) {
 //	xloc = (loc[i].childNodes[0].childNodes[0].nodeValue);
@@ -77,7 +87,16 @@ for (i=25; i<50; i++) {
 		destinations2.push(new google.maps.LatLng(xloc, yloc));
 	}
 }
+
+// Not only performs initialization, but sets off all the work of the application
 google.maps.event.addDomListener(window, 'load', initialize); 
+
+
+/*****************************************************
+*
+Below here is all supporting functions
+*
+*****************************************************/
 
 function loadXMLDoc(filename)
 {
@@ -108,16 +127,26 @@ function initialize() {
 	calculateDistances(destinations2);
 }
 
+// this is a class
 function locations() {
 	this.endpoints = [];
 	this.endpointAddresses = [];
 	this.index = 0;
 	this.origin = 0;
 
+	// addPlaces is a function storied as a member (variable) of locations
+	// each call to addPlaces 
 	this.addPlaces = function(response) {
 		console.log("In addPlaces");
-	  var origins = response.originAddresses;	
-		this.origin = origins[0];
+		var origins = response.originAddresses;	
+
+		// There only ought to ever be a single origin. This origin can be set the first time addPlaces is called and
+		// shouldn't have to ever be subsequently updated
+		if (this.origin == 0) {
+			this.origin = origins[0];
+			console.log("this.origin is " + this.origin);
+		}
+
 		var destinations = response.destinationAddresses;
 		var results = response.rows[0].elements;
 		for (var j = 0; j < results.length; j++) {
@@ -125,15 +154,20 @@ function locations() {
 			this.endpointAddresses[this.index] = destinations[j]; //still need to sort these!!
 			console.log("destination is " + destinations[j]);
 			this.index = this.index + 1;
-			console.log("working");
 		}
-		callBacksPerformed++;
-		console.log("callBacks is " + callBacksPerformed);
-		if (callBacksPerformed == callBacks) {
+		console.log("End Destination loop");
+
+		addPlacesCalls++;
+		console.log("addPlaces call count is " + addPlacesCalls);
+
+		// Ideally, remove this from this function to the main code
+		// The reason that this appears to need to stay here at the moment is (I believe) the asynchronous nature
+		// of the Google Maps API. If this were moved to the end of the main code, it would be executed before any
+		// data is collected from Google. 
+		if (addPlacesCalls == numberOfCallbacksNeeded) {
 			this.sortPlaces();
 			console.log("sorting done");
 			this.logDistances();
-			//logDistances(self);	
 		}
 	}
 
@@ -159,6 +193,9 @@ function locations() {
 }
 
 
+
+// Maximum of 25 origins or 25 destinations per request; and
+// At most 100 elements (origins times destinations) per request.
 function calculateDistances(input) {
   var service = new google.maps.DistanceMatrixService();
   service.getDistanceMatrix(
@@ -169,16 +206,17 @@ function calculateDistances(input) {
       unitSystem: google.maps.UnitSystem.IMPERIAL,
       avoidHighways: false,
       avoidTolls: false
-    }, callback);
+    }, calcDistCallback);
 }
 
-function callback(response, status) {
+function calcDistCallback(response, status) {
   if (status != google.maps.DistanceMatrixStatus.OK) {
     alert('Error was: ' + status);
   } else {
+
+	// The following two lines appear to be meaningless
     var origins = response.originAddresses;
     var destinations = response.destinationAddresses;
-		//response.rows[0].elements.sort(responseCompare);
 
 		locList.addPlaces(response);
 
