@@ -107,53 +107,57 @@ function initialize() {
 
 // this is a class
 function locations() {
-	this.endpoints = []; // Destination coordinates - I believe
-	this.endpointAddresses = []; // Addresses in readable form corresponding to the endpoints
+	this.endpointAddressTupleArray = [];
+//	this.endpoints = []; // Destination coordinates - I believe      REMOVE THESE
+//	this.endpointAddresses = []; // Addresses in readable form corresponding to the endpoints
+	this.distanceResults = []; //distance matrix results
+	this.distanceResultsIndex = 0;
 	this.index = 0;
 	this.origin = 0;
 
-	// addPlaces is a function storied as a member (variable) of locations
-	// each call to addPlaces 
-	this.addPlaces = function(response) {
-		console.log("In addPlaces");
-		var origins = response.originAddresses;	
+	// first store responses that can then be parsed later after all data is acquired
+	this.addDistanceMatrixResults = function(response) {
+		this.distanceResults[this.distanceResultsIndex] = response;
+		this.distanceResultsIndex++;
+	}
 
-		// There only ought to ever be a single origin. This origin can be set the first time addPlaces is called and
-		// shouldn't have to ever be subsequently updated
-		if (this.origin == 0) {
-			this.origin = origins[0];
-			console.log("this.origin is " + this.origin);
+
+	// To be called after all data has been gathered to extract only desired information
+	this.parsePlaces = function() {
+
+		this.origin = this.distanceResults[0].originAddresses[0];
+		for (var i = 0; i<addPlacesCalls; i++) {
+			if (typeof this.distanceResults[i] === 'undefined') {
+				console.log("invalid index " + i);
+				return;
+			}
+			var destinations = this.distanceResults[i].destinationAddresses;
+			var results = this.distanceResults[i].rows[0].elements;
+			for (var j = 0; j < results.length; j++) {
+				var endpointAddressTuple = [];
+				endpointAddressTuple[0] = results[j];
+				endpointAddressTuple[1] = destinations[j];
+				this.endpointAddressTupleArray[this.index] = endpointAddressTuple;
+				this.index = this.index + 1;
+			}
+			console.log("End Destination loop");
 		}
-
-		var destinations = response.destinationAddresses;
-		var results = response.rows[0].elements;
-		for (var j = 0; j < results.length; j++) {
-			this.endpoints[this.index] = results[j];
-			this.endpointAddresses[this.index] = destinations[j]; //still need to sort these!!
-			console.log("destination is " + destinations[j]);
-			this.index = this.index + 1;
-		}
-		console.log("End Destination loop");
-
 	}
 
 	this.sortPlaces = function() {
 		if (this.index > 0){
-			this.endpoints.sort(responseCompare);
+			this.endpointAddressTupleArray.sort(responseCompare);
 		}	
 		else{
 			console.log("Error. Object had no endpoints");
 		}
-//		for (i=0; i<this.endpoints.length; i++) {
-//			console.log(this.endpoints[i]);
-//		}
 	}
 
 	this.logDistances = function() {
-		for (i=0; i<this.endpoints.length; i++) {
-			outputDiv.innerHTML += this.origin + ' to ' + this.endpointAddresses[i]
-					+ ': ' + this.endpoints[i].distance.text + ' in '
-					+ this.endpoints[i].duration.text + '<br>';
+		for (i=0; i<this.endpointAddressTupleArray.length; i++) {
+			outputDiv.innerHTML += this.origin + ' to ' + this.endpointAddressTupleArray[i][1]
+					+ ': ' + this.endpointAddressTupleArray[i][0].distance.text + ' in '
+					+ this.endpointAddressTupleArray[i][0].duration.text + '<br>';
 		}
 	}
 }
@@ -182,7 +186,8 @@ function calcDistCallback(response, status) {
 
 	// The following two lines appear to be meaningless
 
-		locList.addPlaces(response);
+		locList.addDistanceMatrixResults(response);
+		addPlacesCalls++;
 		checkRequestCount();
 
 		//console.log("origins length is " + origins.length);
@@ -201,11 +206,11 @@ function calcDistCallback(response, status) {
 
 // Sort query results based on distance from origin
 function responseCompare(a,b) {
-	var atext = a.distance.text.split(" ");
-	var btext = b.distance.text.split(" ");
-	//console.log(text[0]);
+	var atext = a[0].distance.text.split(" ");
+	var btext = b[0].distance.text.split(" ");
 	var aDis = atext[0];
 	var bDis = btext[0];
+	console.log("aDis is " + aDis + " and bDis is " + bDis);
 
 	if (aDis < bDis){
 		return -1;
@@ -218,7 +223,6 @@ function responseCompare(a,b) {
 
 // This fucnct
 function checkRequestCount(a,b) {
-	addPlacesCalls++;
 	console.log("addPlaces call count is " + addPlacesCalls);
 
 	// Ideally, remove this from this function to the main code
@@ -226,9 +230,12 @@ function checkRequestCount(a,b) {
 	// of the Google Maps API. If this were moved to the end of the main code, it would be executed before any
 	// data is collected from Google. 
 	if (addPlacesCalls == numberOfCallbacksNeeded) {
-		locList.sortPlaces();
-		console.log("sorting done");
-		locList.logDistances();
+		//setTimeout(function(){
+			locList.parsePlaces();
+			locList.sortPlaces();
+			console.log("sorting done");
+			locList.logDistances();
+		//}, 1000);
 	}
 }
 
