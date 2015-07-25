@@ -54,9 +54,9 @@ var destinations = [];
 var destinations2 = [];
 var xloc = 0;
 var yloc = 0;
-var addPlacesCalls = 0;
-var numberOfCallbacksNeeded = 2;
-
+var numberOfCallbacksNeeded = 2; // The number of stages that the requests to the Google API are broken into
+								 // The limit imposed by Google appears to be 30 at a time
+var addPlacesCalls = 0; // Number of requests thus far performed
 /*****************************************************
 *
 Main Application Code
@@ -67,13 +67,6 @@ Main Application Code
 var locList = new locations();
 
 // Now parse our coords.xml file to create an array structure of coordinates
-
-//for (i=0; i<loc.length; i++) {
-//for (i=0; i<5; i++) {
-//	xloc = (loc[i].childNodes[0].childNodes[0].nodeValue);
-//	yloc = (loc[i].childNodes[1].childNodes[0].nodeValue);
-//	destinations.push(new google.maps.LatLng(xloc, yloc));
-//}
 for (i=0; i<25; i++) {
 	xloc = (loc[i].childNodes[0].childNodes[0].nodeValue);
 	yloc = (loc[i].childNodes[1].childNodes[0].nodeValue);
@@ -98,21 +91,6 @@ Below here is all supporting functions
 *
 *****************************************************/
 
-function loadXMLDoc(filename)
-{
-	if (window.XMLHttpRequest)
-		{
-			xhttp=new XMLHttpRequest();
-		}
-	else // code for IE5 and IE6
-		{
-			xhttp=new ActiveXObject("Microsoft.XMLHTTP");
-		}
-		xhttp.open("GET",filename,false);
-		xhttp.send();
-	return xhttp.responseXML;
-} 
-
 function initialize() {
   geocoder = new google.maps.Geocoder();
   var opts = {
@@ -129,8 +107,8 @@ function initialize() {
 
 // this is a class
 function locations() {
-	this.endpoints = [];
-	this.endpointAddresses = [];
+	this.endpoints = []; // Destination coordinates - I believe
+	this.endpointAddresses = []; // Addresses in readable form corresponding to the endpoints
 	this.index = 0;
 	this.origin = 0;
 
@@ -157,18 +135,6 @@ function locations() {
 		}
 		console.log("End Destination loop");
 
-		addPlacesCalls++;
-		console.log("addPlaces call count is " + addPlacesCalls);
-
-		// Ideally, remove this from this function to the main code
-		// The reason that this appears to need to stay here at the moment is (I believe) the asynchronous nature
-		// of the Google Maps API. If this were moved to the end of the main code, it would be executed before any
-		// data is collected from Google. 
-		if (addPlacesCalls == numberOfCallbacksNeeded) {
-			this.sortPlaces();
-			console.log("sorting done");
-			this.logDistances();
-		}
 	}
 
 	this.sortPlaces = function() {
@@ -215,10 +181,9 @@ function calcDistCallback(response, status) {
   } else {
 
 	// The following two lines appear to be meaningless
-    var origins = response.originAddresses;
-    var destinations = response.destinationAddresses;
 
 		locList.addPlaces(response);
+		checkRequestCount();
 
 		//console.log("origins length is " + origins.length);
 //    for (var i = 0; i < origins.length; i++) {
@@ -234,6 +199,7 @@ function calcDistCallback(response, status) {
   }
 }
 
+// Sort query results based on distance from origin
 function responseCompare(a,b) {
 	var atext = a.distance.text.split(" ");
 	var btext = b.distance.text.split(" ");
@@ -248,6 +214,22 @@ function responseCompare(a,b) {
 		return 1;
 	}
 	return 0;
+}
+
+// This fucnct
+function checkRequestCount(a,b) {
+	addPlacesCalls++;
+	console.log("addPlaces call count is " + addPlacesCalls);
+
+	// Ideally, remove this from this function to the main code
+	// The reason that this appears to need to stay here at the moment is (I believe) the asynchronous nature
+	// of the Google Maps API. If this were moved to the end of the main code, it would be executed before any
+	// data is collected from Google. 
+	if (addPlacesCalls == numberOfCallbacksNeeded) {
+		locList.sortPlaces();
+		console.log("sorting done");
+		locList.logDistances();
+	}
 }
 
 function addMarker(location, isDestination) {
@@ -280,6 +262,22 @@ function deleteOverlays() {
   }
   markersArray = [];
 }
+
+function loadXMLDoc(filename)
+{
+	if (window.XMLHttpRequest)
+		{
+			xhttp=new XMLHttpRequest();
+		}
+	else // code for IE5 and IE6
+		{
+			xhttp=new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		xhttp.open("GET",filename,false);
+		xhttp.send();
+	return xhttp.responseXML;
+} 
+
 
 
 </script>
