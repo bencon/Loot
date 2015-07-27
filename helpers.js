@@ -5,61 +5,63 @@ Main class /data structure
 *
 *****************************************************/
 function locations() {
-	this.endpointAddressTupleArray = [];
-	this.distanceResults = []; //distance matrix results
-	this.distanceResultsIndex = 0;
-	this.index = 0;
-	this.origin = 0;
+    this.endpointAddressTupleArray = [];
+    this.distanceResults = []; //distance matrix results
+    this.distanceResultsIndex = 0;
+    this.index = 0;
+    this.origin = 0;
 
-	// first store responses that can then be parsed later after all data is acquired
-	this.addDistanceMatrixResults = function(response) {
-		this.distanceResults[this.distanceResultsIndex] = response;
-		this.distanceResultsIndex++;
-	}
+    // first store responses that can then be parsed later after all data is acquired
+    this.addDistanceMatrixResults = function(response) {
+        this.distanceResults[this.distanceResultsIndex] = response;
+        this.distanceResultsIndex++;
+        console.log("In addDistanceMatrixResults");
+    }
 
 
-	// To be called after all data has been gathered to extract only desired information
-	this.parsePlaces = function() {
+    // To be called after all data has been gathered to extract only desired information
+    this.parsePlaces = function() {
+        console.log("In parsePlaces");
+        this.origin = this.distanceResults[0].originAddresses[0];
+        for (var i = 0; i<addPlacesCalls; i++) {
+            if (typeof this.distanceResults[i] === 'undefined') {
+                console.log("invalid index " + i);
+                return;
+            }
+            var destinations = this.distanceResults[i].destinationAddresses;
+            var results = this.distanceResults[i].rows[0].elements;
+            for (var j = 0; j < results.length; j++) {
+                var endpointAddressTuple = [];
+                endpointAddressTuple[0] = results[j];
+                endpointAddressTuple[1] = destinations[j];
+                this.endpointAddressTupleArray[this.index] = endpointAddressTuple;
+                this.index = this.index + 1;
+            }
+            console.log("End Destination loop");
+        }
+    }
 
-		this.origin = this.distanceResults[0].originAddresses[0];
-		for (var i = 0; i<addPlacesCalls; i++) {
-			if (typeof this.distanceResults[i] === 'undefined') {
-				console.log("invalid index " + i);
-				return;
-			}
-			var destinations = this.distanceResults[i].destinationAddresses;
-			var results = this.distanceResults[i].rows[0].elements;
-			for (var j = 0; j < results.length; j++) {
-				var endpointAddressTuple = [];
-				endpointAddressTuple[0] = results[j];
-				endpointAddressTuple[1] = destinations[j];
-				this.endpointAddressTupleArray[this.index] = endpointAddressTuple;
-				this.index = this.index + 1;
-			}
-			console.log("End Destination loop");
-		}
-	}
+    this.sortPlaces = function() {
+        console.log("In sortPlaces");
+        if (this.index > 0){
+            this.endpointAddressTupleArray.sort(sortByMinutes);
+        }
+        else{
+            console.log("Error. Object had no endpoints");
+        }
+    }
 
-	this.sortPlaces = function() {
-		if (this.index > 0){
-			this.endpointAddressTupleArray.sort(sortByMinutes);
-		}	
-		else{
-			console.log("Error. Object had no endpoints");
-		}
-	}
-
-	// From an already sorting group of data: Adds to the output list:
-	//	1) Address
-	//	2) Distance in miles
-	//	3) Time in minutes
-	this.logDistances = function() {
-		for (i=0; i<this.endpointAddressTupleArray.length; i++) {
-			outputDiv.innerHTML += this.origin + ' to ' + this.endpointAddressTupleArray[i][1]
-					+ ': ' + this.endpointAddressTupleArray[i][0].distance.text + ' in '
-					+ this.endpointAddressTupleArray[i][0].duration.text + '<br>';
-		}
-	}
+    // From an already sorting group of data: Adds to the output list:
+    //  1) Address
+    //  2) Distance in miles
+    //  3) Time in minutes
+    this.logDistances = function() {
+        for (i=0; i<this.endpointAddressTupleArray.length; i++) {
+            outputDiv.innerHTML += this.origin + ' to ' + this.endpointAddressTupleArray[i][1]
+                    + ': ' + this.endpointAddressTupleArray[i][0].distance.text + ' in '
+                    + this.endpointAddressTupleArray[i][0].duration.text + '<br>';
+        }
+    }
 
 }
 
@@ -72,38 +74,38 @@ Supporting Functions
 
 // Sort query results based on distance (in miles) from origin
 function sortByMiles(a,b) {
-	var atext = a[0].distance.text.split(" "); 
-	var btext = b[0].distance.text.split(" ");
-	var aDis = atext[0] *1; // multiply by 1 to guarantee that the variable is recognized as a number
-	var bDis = btext[0] *1;
+    var atext = a[0].distance.text.split(" ");
+    var btext = b[0].distance.text.split(" ");
+    var aDis = atext[0] *1; // multiply by 1 to guarantee that the variable is recognized as a number
+    var bDis = btext[0] *1;
 
-	if (aDis < bDis){
-		//console.log("aDis " + aDis + " is less than " + bDis);
-		return -1;
-	}
-	if (aDis > bDis){
-		//console.log("aDis " + aDis + " is greater than " + bDis);
-		return 1;
-	}
-	return 0;
+    if (aDis < bDis){
+        //console.log("aDis " + aDis + " is less than " + bDis);
+        return -1;
+    }
+    if (aDis > bDis){
+        //console.log("aDis " + aDis + " is greater than " + bDis);
+        return 1;
+    }
+    return 0;
 }
 
 // Sort query results based on time (in minutes) from origin
 function sortByMinutes(a,b) {
-	var atext = a[0].duration.text.split(" "); 
-	var btext = b[0].duration.text.split(" ");
-	var aDur = atext[0] *1; // multiply by 1 to guarantee that the variable is recognized as a number
-	var bDur = btext[0] *1;
+    var atext = a[0].duration.text.split(" ");
+    var btext = b[0].duration.text.split(" ");
+    var aDur = atext[0] *1; // multiply by 1 to guarantee that the variable is recognized as a number
+    var bDur = btext[0] *1;
 
-	if (aDur < bDur){
-		//console.log("aDur " + aDur + " is less than " + bDur);
-		return -1;
-	}
-	if (aDur > bDur){
-		//console.log("aDur " + aDur + " is greater than " + bDur);
-		return 1;
-	}
-	return 0;
+    if (aDur < bDur){
+        //console.log("aDur " + aDur + " is less than " + bDur);
+        return -1;
+    }
+    if (aDur > bDur){
+        //console.log("aDur " + aDur + " is greater than " + bDur);
+        return 1;
+    }
+    return 0;
 }
 
 
@@ -115,18 +117,19 @@ function checkWithinRange(callback) {
 
 // Performs data manipulation once all data is returned by the Google API
 function checkRequestCount(a,b) {
-	console.log("addPlaces call count is " + addPlacesCalls);
+    console.log("addPlaces call count is " + addPlacesCalls + " vs needed " + numberOfCallbacksNeeded);
 
-	// Ideally, remove this from this function to the main code
-	// The reason that this appears to need to stay here at the moment is (I believe) the asynchronous nature
-	// of the Google Maps API. If this were moved to the end of the main code, it would be executed before any
-	// data is collected from Google. 
-	if (addPlacesCalls == numberOfCallbacksNeeded) {
-			locList.parsePlaces();
-			locList.sortPlaces();
-			console.log("sorting done");
-			locList.logDistances();
-	}
+    // Ideally, remove this from this function to the main code
+    // The reason that this appears to need to stay here at the moment is (I believe) the asynchronous nature
+    // of the Google Maps API. If this were moved to the end of the main code, it would be executed before any
+    // data is collected from Google. 
+    if (addPlacesCalls == numberOfCallbacksNeeded) {
+            console.log("number of Callbacks Needed acquired");
+            locList.parsePlaces();
+            locList.sortPlaces();
+            console.log("sorting done");
+            locList.logDistances();
+    }
 }
 
 function initialize() {
@@ -136,12 +139,12 @@ function initialize() {
     zoom: 10
   };
   map = new google.maps.Map(document.getElementById('map-canvas'), opts);
-	var outputDiv = document.getElementById('outputDiv');
-	outputDiv.innerHTML = '';
-	deleteOverlays(); //probably want to add this back
-	for (arr of destinations) {
-		calculateDistances(arr);
-	}
+    var outputDiv = document.getElementById('outputDiv');
+    outputDiv.innerHTML = '';
+    deleteOverlays(); //probably want to add this back
+    for (arr of destinations) {
+        calculateDistances(arr);
+    }
 }
 
 // Maximum of 25 origins or 25 destinations per request; and
@@ -164,13 +167,13 @@ function calcDistCallback(response, status) {
     alert('Error was: ' + status);
   } else {
 
-	// The following two lines appear to be meaningless
+    // The following two lines appear to be meaningless
+        console.log("In calcDistCallback");
+        locList.addDistanceMatrixResults(response);
+        addPlacesCalls++;
+        checkRequestCount();
 
-		locList.addDistanceMatrixResults(response);
-		addPlacesCalls++;
-		checkRequestCount();
-
-		//console.log("origins length is " + origins.length);
+        //console.log("origins length is " + origins.length);
 //    for (var i = 0; i < origins.length; i++) {
 //      var results = response.rows[i].elements;
 //      //addMarker(origins[i], false);
@@ -218,15 +221,15 @@ function deleteOverlays() {
 
 function loadXMLDoc(filename)
 {
-	if (window.XMLHttpRequest)
-		{
-			xhttp=new XMLHttpRequest();
-		}
-	else // code for IE5 and IE6
-		{
-			xhttp=new ActiveXObject("Microsoft.XMLHTTP");
-		}
-		xhttp.open("GET",filename,false);
-		xhttp.send();
-	return xhttp.responseXML;
-} 
+    if (window.XMLHttpRequest)
+        {
+            xhttp=new XMLHttpRequest();
+        }
+    else // code for IE5 and IE6
+        {
+            xhttp=new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xhttp.open("GET",filename,false);
+        xhttp.send();
+    return xhttp.responseXML;
+}

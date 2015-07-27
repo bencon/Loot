@@ -1,3 +1,8 @@
+# Packages Required:
+#	requests
+#	BeautifulSoup
+#	...
+
 import xml.etree.cElementTree as ET
 import requests
 import re
