@@ -139,8 +139,9 @@ function initialize() {
 	var outputDiv = document.getElementById('outputDiv');
 	outputDiv.innerHTML = '';
 	deleteOverlays(); //probably want to add this back
-	calculateDistances(destinations);
-	calculateDistances(destinations2);
+	for (arr of destinations) {
+		calculateDistances(arr);
+	}
 }
 
 // Maximum of 25 origins or 25 destinations per request; and
