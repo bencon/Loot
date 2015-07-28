@@ -4,9 +4,11 @@ A work in progress to expose nearby desired Craiglist items
 <br>
 <br>
 ##### Todo:
-1. Expose item description to go along with coordinates
-2. Allow user input of desired keywords to search for
-3. Add email on desirable item feature
-4. Improve web interface
-5. ....
+* Improve extract.py to pull coordinates for successfully from google map page links
+* Make sure Description is being paired correctly with the desired item
+* Allow user input of desired keywords to filter loot
+* Add email on desirable item feature
+* return map labels
+* Improve web interface
+* ....
 
