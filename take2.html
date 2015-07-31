@@ -51,7 +51,8 @@ var hockessin = 'Hockessin, DE';
 var destinationIcon = 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=D|FF0000|000000';
 var originIcon = 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=O|FFFF00|000000';
 var xmlDoc = loadXMLDoc("coords.xml");
-var loc = xmlDoc.getElementsByTagName("loc");
+var coordinateNodes = xmlDoc.getElementsByTagName("loc");
+var addressNodes = xmlDoc.getElementsByTagName("AddressString");
 var origins = [pa];
 var destinations = [];
 var descriptions = [];
@@ -75,10 +76,10 @@ function main() {
     coordArr = [];
     descriptionArr = [];
     i=0;
-    while (i< loc.length) {
+    while (i< coordinateNodes.length) {
         var currentItem = [];
-        xloc = (loc[i].childNodes[0].childNodes[0].nodeValue);
-        yloc = (loc[i].childNodes[1].childNodes[0].nodeValue);
+        xloc = (coordinateNodes[i].childNodes[0].childNodes[0].nodeValue);
+        yloc = (coordinateNodes[i].childNodes[1].childNodes[0].nodeValue);
         if (i % 25 == 24) {
             // For every subset array size of 24, append array to destinations and start new array
             destinations.push(coordArr);
@@ -88,8 +89,25 @@ function main() {
             numberOfCallbacksNeeded++;
         }
         coordArr.push(new google.maps.LatLng(xloc, yloc));
-        descriptionArr.push(loc[i].childNodes[2].childNodes[0].nodeValue); //push description
+        descriptionArr.push(coordinateNodes[i].childNodes[2].childNodes[0].nodeValue); //push description
         i++;
+    }
+    j=0;
+    while (j< addressNodes.length) {
+        var currentItem = [];
+        addstring = (addressNodes[j].childNodes[0].childNodes[0].nodeValue);
+        console.log(addstring);
+        if ((i+j) % 25 == 24) {
+            // For every subset array size of 24, append array to destinations and start new array
+            destinations.push(coordArr);
+            descriptions.push(descriptionArr);
+            coordArr = [];
+            descriptionArr = [];
+            numberOfCallbacksNeeded++;
+        }
+        coordArr.push(addstring);
+        descriptionArr.push(addressNodes[j].childNodes[1].childNodes[0].nodeValue); //push description
+        j++;
     }
     destinations.push(coordArr);
     descriptions.push(descriptionArr);

@@ -26,6 +26,7 @@ function loot(origin, endpoint, address, description) {
     this.toString = function(){
         console.log(this.origin);
         console.log(this.endpoint);
+        console.log("Status is " + this.endpoint.status);
         console.log(this.address);
         //console.log(this.description);
     }
@@ -95,11 +96,13 @@ function locations() {
             loot.logDistance();
             //loot.toString();
         }
-        //for (i=0; i<this.endpointAddressTupleArray.length; i++) {
-        //    outputDiv.innerHTML += this.origin + ' to ' + this.endpointAddressTupleArray[i][1]
-        //            + ': ' + this.endpointAddressTupleArray[i][0].distance.text + ' in '
-        //            + this.endpointAddressTupleArray[i][0].duration.text + '<br>';
-        //}
+    }
+
+    this.printLoot = function() {
+        console.log("In printLoot");
+        for (loot of this.lootPile) {
+            console.log(loot.toString());
+        }
     }
 
 }
@@ -165,6 +168,7 @@ function checkRequestCount(a,b) {
     if (addPlacesCalls == numberOfCallbacksNeeded) {
             console.log("number of Callbacks Needed acquired");
             locList.parsePlaces();
+            locList.printLoot();
             locList.sortPlaces();
             console.log("sorting done");
             locList.logDistances();
