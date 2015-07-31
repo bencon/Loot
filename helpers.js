@@ -220,17 +220,14 @@ function calcDistCallback(response, status) {
         addPlacesCalls++;
         checkRequestCount();
 
-//        console.log("origins length is " + origins.length);
-//    for (var i = 0; i < origins.length; i++) {
-//      var results = response.rows[i].elements;
-//      //addMarker(origins[i], false);
+    for (var i = 0; i < origins.length; i++) {
+      var results = response.rows[i].elements;
+      addMarker(origins[i], false);
 //      for (var j = 0; j < results.length; j++) {
-//        //addMarker(destinations[j], true);
-//        outputDiv.innerHTML += origins[i] + ' to ' + destinations[j]
-//            + ': ' + results[j].distance.text + ' in '
-//            + results[j].duration.text + '<br>';
+//        addMarker(destinations[i][j].string, true);
+//        //console.log(destinations[i][j]);
 //      }
-//    }
+    }
 
   }
 }
@@ -253,8 +250,11 @@ function addMarker(location, isDestination) {
         icon: icon
       });
       markersArray.push(marker);
-    } else {
-      alert('Geocode was not successful for the following reason: '
+    }
+    else {
+//      alert('Geocode was not successful for the following reason: '
+//        + status);
+      console.log('Geocode was not successful for the following reason: '
         + status);
     }
   });
