@@ -20,7 +20,7 @@ def parseCraigslistRSS(hyperlink):
     print r.headers['content-type']
 
     soup = BeautifulSoup(r.text, 'xml')
-    #print (soup.prettify())
+    print (soup.prettify())
 
     #print soup.link
     results = []
@@ -29,6 +29,7 @@ def parseCraigslistRSS(hyperlink):
         linkDescriptionArr = []
         info = ""
         for link in item.find('link'):
+            checkLinkDatabase(link.string)
             linkDescriptionArr.append(link.string)
         for title in item.find("title"):
             info += str(title.string)
@@ -37,6 +38,8 @@ def parseCraigslistRSS(hyperlink):
         info = info.replace('\n', ' ').replace('\r', '')
         linkDescriptionArr.append(info)
         results.append(linkDescriptionArr)
+
+    return
 
     coords=[]
     addresses=[]
@@ -86,6 +89,25 @@ def parseCraigslistRSS(hyperlink):
     tree = ET.ElementTree(root)
     tree.write("coords.xml")
 
+def checkLinkDatabase(link):
+    """
+    Checks an xml file to see whether this item has already been checked before, if not adds
+    the link to the database
+    Will eventually be used to block announcements of new items
+    """
+    tree = ET.parse('previouslyDiscoveredLoot.xml')
+    root = tree.getroot()
+    for loot in root.findall('loot'):
+        if (loot.get('stuff') == link):
+            print "link already in database"
+            return
+
+    # Otherwise add loot to document if it was not found
+    newLoot = ET.SubElement(root,'loot')
+    newLoot.set("stuff",link)
+    root.append(newLoot)
+    print "New stuff found!"
+    tree.write("previouslyDiscoveredLoot.xml")
 
 if __name__ == "__main__":
     parseCraigslistRSS('https://philadelphia.craigslist.org/zip/index.rss');  #craigslist free
