@@ -4,11 +4,12 @@ Main classes /data structures
 *
 *****************************************************/
 
-function loot(origin, endpoint, address, description) {
+function loot(origin, endpoint, address, description, hyperlink) {
     this.origin = origin;
     this.endpoint = endpoint;
     this.address = address;
     this.description = description;
+    this.hyperlink = hyperlink;
 
     // Adds to the output list:
     //  1) Address
@@ -24,11 +25,60 @@ function loot(origin, endpoint, address, description) {
     }
 
     this.toString = function(){
-        console.log(this.origin);
-        console.log(this.endpoint);
+        console.log("origin is " + this.origin);
+        console.log("endpoint is " + this.endpoint);
         console.log("Status is " + this.endpoint.status);
-        console.log(this.address);
+        console.log("address is " + this.address);
+        console.log("hyperlink is " + this.hyperlink);
         //console.log(this.description);
+    }
+
+    //make sure that the current loot has all expected properties
+    this.validate = function(){
+        if (typeof this.origin === 'undefined') {
+            console.log("origin undefined");
+            return false;
+        }
+        if (typeof this.endpoint === 'undefined') {
+            console.log("endpoint undefined");
+            return false;
+        }
+        if (typeof this.address === 'undefined') {
+            console.log("address undefined");
+            return false;
+        }
+        if (typeof this.description === 'undefined') {
+            console.log("description undefined");
+            return false;
+        }
+        if (typeof this.hyperlink === 'undefined') {
+            console.log("hyperlink undefined");
+            return false;
+        }
+        console.log("current loot successfully validated");
+        return true
+    }
+
+    // loot table
+    //     id
+    //     origin (200)
+    //     address (200)
+    //     distance (100)
+    //     description (1000)
+    //     hyperlink (200)
+    //
+    // adds the current loot item to a sql database
+    this.addToDatabase = function(){
+        $.ajax({
+            type: "POST",
+            url: "http://localhost/addLoot.php",
+            async: true,
+            timeout: 50000,
+            data: {origin: this.origin, address: this.address, distance: this.endpoint.distance.text, description: this.description, hyperlink: this.hyperlink},
+            success: function(data){
+            console.log(data);
+            }
+        });
     }
 
 }
@@ -36,6 +86,7 @@ function loot(origin, endpoint, address, description) {
 function locations() {
     this.origCoordinates = []; // original unprocessed coordinates
     this.origDescriptions = []; // original unprocessed descriptions
+    this.origLinks = []; // original unprocessed hyperlinks
     this.lootPile = [];
     this.endpointAddressTupleArray = [];
     this.distanceResults = []; //distance matrix results
@@ -66,7 +117,7 @@ function locations() {
             var results = this.distanceResults[i].rows[0].elements;
             console.log("results length is " + results.length);
             for (var j = 0; j < results.length; j++) {
-                this.lootPile.push(new loot(this.origin, results[j], tempName[j], this.origDescriptions[i][j]));
+                this.lootPile.push(new loot(this.origin, results[j], tempName[j], this.origDescriptions[i][j], this.origLinks[i][j]));
                 var endpointAddressTuple = [];
                 endpointAddressTuple[0] = results[j];
                 endpointAddressTuple[1] = tempName[j];
@@ -105,6 +156,28 @@ function locations() {
         }
     }
 
+    this.addLootToDatabase = function() {
+        console.log("In addLoot");
+        for (loot of this.lootPile) {
+            loot.addToDatabase();
+        }
+    }
+
+    this.validateLoot = function() {
+        result = true;
+        console.log("In validateLoot");
+        for (loot of this.lootPile) {
+            if (typeof loot === 'undefined') {
+                console.log("Loot undefined!!");
+                result = false;
+            }
+            if (loot.validate() == false) {
+                console.log("Loot validation failure!!");
+                result = false;
+            }
+        }
+        return result;
+    }
 }
 
 
@@ -169,9 +242,14 @@ function checkRequestCount(a,b) {
             console.log("number of Callbacks Needed acquired");
             locList.parsePlaces();
             locList.printLoot();
+            if (!locList.validateLoot()) {
+                console.log("Terminating because of failed loot validation");
+                return;
+            }
             locList.sortPlaces();
             console.log("sorting done");
             locList.logDistances();
+            locList.addLootToDatabase();
     }
 }
 
@@ -188,6 +266,7 @@ function initialize() {
 
     locList.origCoordinates = destinations;
     locList.origDescriptions = descriptions;
+    locList.origLinks = hyperlinks;
 
     for (arr of locList.origCoordinates) {
         calculateDistances(arr);

@@ -39,7 +39,7 @@ def parseCraigslistRSS(hyperlink):
         linkDescriptionArr.append(info)
         results.append(linkDescriptionArr)
 
-    return
+    #return
 
     coords=[]
     addresses=[]
@@ -58,12 +58,12 @@ def parseCraigslistRSS(hyperlink):
                     if (len(splitString) > 1 and splitString[1]):
                         coordinates = splitString[1]
                         print coordinates + " <----- SUCCESS"
-                        # Put coordinates in array form and add coordinates/ description pair to array
-                        coords.append([coordinates.split(','), item[1]])
+                        # Put coordinates in array form and add coordinates/ description /hyperlink to array
+                        coords.append([coordinates.split(','), item[1], item[0]])
                     elif (len(attempt2) > 1):
                         address = attempt2[1]
                         print address + "<------ SUCCESS V2"
-                        addresses.append([address, item[1]])
+                        addresses.append([address, item[1], item[0]])
 
 
     ####  Generate XML document wtih coordinate data
@@ -77,6 +77,8 @@ def parseCraigslistRSS(hyperlink):
         x.text = (str)(arr[0][0])
         y.text = (str)(arr[0][1])
         description.text = arr[1]
+        hyperlink = ET.SubElement(field, 'link')
+        hyperlink.text = arr[2]
 
     for arr in addresses:
         field = ET.SubElement(root,"AddressString")
@@ -84,6 +86,8 @@ def parseCraigslistRSS(hyperlink):
         description = ET.SubElement(field,'desc')
         addr.text = (str)(arr[0])
         description.text = arr[1]
+        hyperlink = ET.SubElement(field, 'link')
+        hyperlink.text = arr[2]
 
 
     tree = ET.ElementTree(root)

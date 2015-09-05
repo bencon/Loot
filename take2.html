@@ -3,6 +3,7 @@
   <head>
     <title>Distance Matrix service</title>
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="helpers.js" type="text/javascript"></script>
     <style>
       html, body {
@@ -56,6 +57,7 @@ var addressNodes = xmlDoc.getElementsByTagName("AddressString");
 var origins = [pa];
 var destinations = [];
 var descriptions = [];
+var hyperlinks = [];
 var xloc = 0;
 var yloc = 0;
 var numberOfCallbacksNeeded = 0; // The number of stages that the requests to the Google API are broken into
@@ -75,6 +77,7 @@ function main() {
     // parse xml file to extact data to request sizes that Google can handle
     coordArr = [];
     descriptionArr = [];
+	linkArr = [];
     i=0;
     while (i< coordinateNodes.length) {
         var currentItem = [];
@@ -84,14 +87,18 @@ function main() {
             // For every subset array size of 24, append array to destinations and start new array
             destinations.push(coordArr);
             descriptions.push(descriptionArr);
+            hyperlinks.push(linkArr);
             coordArr = [];
             descriptionArr = [];
+            linkArr = [];
             numberOfCallbacksNeeded++;
         }
         coordArr.push(new google.maps.LatLng(xloc, yloc));
         descriptionArr.push(coordinateNodes[i].childNodes[2].childNodes[0].nodeValue); //push description
+		linkArr.push(coordinateNodes[i].childNodes[3].childNodes[0].nodeValue); //push hyperlink
         i++;
     }
+	// continue previous array with alternate style destination (literal address rather than coordinates)
     j=0;
     while (j< addressNodes.length) {
         var currentItem = [];
@@ -101,16 +108,21 @@ function main() {
             // For every subset array size of 24, append array to destinations and start new array
             destinations.push(coordArr);
             descriptions.push(descriptionArr);
+            hyperlinks.push(linkArr);
             coordArr = [];
             descriptionArr = [];
+            linkArr = [];
             numberOfCallbacksNeeded++;
         }
         coordArr.push(addstring);
         descriptionArr.push(addressNodes[j].childNodes[1].childNodes[0].nodeValue); //push description
+		linkArr.push(addressNodes[j].childNodes[2].childNodes[0].nodeValue); //push hyperlink
         j++;
     }
+	// finally push final non-full array
     destinations.push(coordArr);
     descriptions.push(descriptionArr);
+    hyperlinks.push(linkArr);
     numberOfCallbacksNeeded++;
 
 
