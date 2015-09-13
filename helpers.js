@@ -156,13 +156,6 @@ function locations() {
         }
     }
 
-    this.addLootToDatabase = function() {
-        console.log("In addLoot");
-        for (loot of this.lootPile) {
-            loot.addToDatabase();
-        }
-    }
-
     this.validateLoot = function() {
         result = true;
         console.log("In validateLoot");
@@ -178,6 +171,26 @@ function locations() {
         }
         return result;
     }
+
+    this.addLootToDatabase = function() {
+        console.log("In addLoot");
+        for (loot of this.lootPile) {
+            loot.addToDatabase();
+        }
+    }
+
+    this.clearDatabase = function(){
+        $.ajax({
+            type: "POST",
+            url: "http://localhost/clearLoot.php",
+            async: true,
+            timeout: 50000,
+            data: {},
+            success: function(data){
+            console.log(data);
+            }
+        });
+    }
 }
 
 
@@ -186,6 +199,20 @@ function locations() {
 Supporting Functions
 *
 *****************************************************/
+
+// really hacky(and just bad) way to complete the program which calls my script to send the email
+function executeBatchOnCompletion() {
+	$.ajax({
+		type: "POST",
+		url: "http://localhost/runBash.php",
+		async: true,
+		timeout: 50000,
+		data: {},
+		success: function(data){
+		console.log(data);
+		}
+	});
+}
 
 // Sort loot based on time (in minutes) from origin
 function compareLootByTime(a,b) {
@@ -249,14 +276,16 @@ function checkRequestCount(a,b) {
             locList.sortPlaces();
             console.log("sorting done");
             locList.logDistances();
+            locList.clearDatabase();
             locList.addLootToDatabase();
+			executeBatchOnCompletion();
     }
 }
 
 function initialize() {
   geocoder = new google.maps.Geocoder();
   var opts = {
-    center: home,
+    center: unisys,
     zoom: 10
   };
   map = new google.maps.Map(document.getElementById('map-canvas'), opts);
@@ -294,6 +323,8 @@ function calcDistCallback(response, status) {
         console.log("Error in calcDistCallback!");
     }
     else {
+		var origins = response.originAddresses;
+		var destinations = response.destinationAddresses;
         console.log("In calcDistCallback");
         locList.addDistanceMatrixResults(response);
         addPlacesCalls++;
@@ -302,10 +333,10 @@ function calcDistCallback(response, status) {
     for (var i = 0; i < origins.length; i++) {
       var results = response.rows[i].elements;
       addMarker(origins[i], false);
-//      for (var j = 0; j < results.length; j++) {
-//        addMarker(destinations[i][j].string, true);
+      for (var j = 0; j < results.length; j++) {
+        addMarker(destinations[j], true);
 //        //console.log(destinations[i][j]);
-//      }
+      }
     }
 
   }
@@ -331,8 +362,6 @@ function addMarker(location, isDestination) {
       markersArray.push(marker);
     }
     else {
-//      alert('Geocode was not successful for the following reason: '
-//        + status);
       console.log('Geocode was not successful for the following reason: '
         + status);
     }
