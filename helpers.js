@@ -335,7 +335,8 @@ function calcDistCallback(response, status) {
       addMarker(origins[i], false);
       for (var j = 0; j < results.length; j++) {
         addMarker(destinations[j], true);
-//        //console.log(destinations[i][j]);
+		//sleep(100);
+        //console.log(destinations[i][j]);
       }
     }
 
@@ -364,6 +365,11 @@ function addMarker(location, isDestination) {
     else {
       console.log('Geocode was not successful for the following reason: '
         + status);
+	  if (status == "OVER_QUERY_LIMIT") {
+		  console.log('Attempting to retry after 1 seconds');
+		  sleep(1000);
+		  addMarker(location, isDestination);
+	  }
     }
   });
 }
@@ -388,4 +394,13 @@ function loadXMLDoc(filename)
         xhttp.open("GET",filename,false);
         xhttp.send();
     return xhttp.responseXML;
+}
+
+function sleep(milliseconds) {
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > milliseconds){
+      break;
+    }
+  }
 }

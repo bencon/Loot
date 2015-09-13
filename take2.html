@@ -42,8 +42,8 @@ var geocoder;
 var bounds = new google.maps.LatLngBounds();
 var markersArray = [];
 
-var home = new google.maps.LatLng(40.120354, -75.50218000000001);
 var pa = "847 Valley Forge Road Phoenixville, PA";
+var unisys = "2476 Swedesford Rd, Malvern, PA";
 var jersey = "New Jersey";
 var newark = 'Newark, DE';
 var york = 'Manhattan, NY';
@@ -54,7 +54,7 @@ var originIcon = 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=
 var xmlDoc = loadXMLDoc("coords.xml");
 var coordinateNodes = xmlDoc.getElementsByTagName("loc");
 var addressNodes = xmlDoc.getElementsByTagName("AddressString");
-var origins = [pa];
+var origins = [unisys];
 var destinations = [];
 var descriptions = [];
 var hyperlinks = [];
@@ -79,6 +79,14 @@ function main() {
     descriptionArr = [];
 	linkArr = [];
     i=0;
+	console.log("coordinate length is " + coordinateNodes.length);
+
+	// If there are no coordinates to parse, no point continuing
+	if (coordinateNodes.length == 0) {
+		console.log("Returning due to insufficient coordinateNodes length");
+		return;
+	}
+
     while (i< coordinateNodes.length) {
         var currentItem = [];
         xloc = (coordinateNodes[i].childNodes[0].childNodes[0].nodeValue);
