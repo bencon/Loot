@@ -37,9 +37,9 @@ def parseCraigslistRSS(hyperlink):
         if (skipItem):
             continue
         for title in item.find("title"):
-            info += str(title.string)
+            info += str(title.encode('utf-8'))
         for description in item.find("description"):
-            info += str(description.string)
+            info += str(description.encode('utf-8'))
         info = info.replace('\n', ' ').replace('\r', '')
         linkDescriptionArr.append(info)
         results.append(linkDescriptionArr)
@@ -80,20 +80,20 @@ def parseCraigslistRSS(hyperlink):
         x = ET.SubElement(field,'x')
         y = ET.SubElement(field,'y')
         description = ET.SubElement(field,'desc')
-        x.text = (str)(arr[0][0])
-        y.text = (str)(arr[0][1])
-        description.text = arr[1]
+        x.text = (arr[0][0]).decode('utf-8')
+        y.text = (arr[0][1]).decode('utf-8')
+        description.text = arr[1].decode('utf-8')
         hyperlink = ET.SubElement(field, 'link')
-        hyperlink.text = arr[2]
+        hyperlink.text = arr[2].decode('utf-8')
 
     for arr in addresses:
         field = ET.SubElement(root,"AddressString")
         addr = ET.SubElement(field,'addr')
         description = ET.SubElement(field,'desc')
-        addr.text = (str)(arr[0])
-        description.text = arr[1]
+        addr.text = (arr[0]).decode('utf-8')
+        description.text = arr[1].decode('utf-8')
         hyperlink = ET.SubElement(field, 'link')
-        hyperlink.text = arr[2]
+        hyperlink.text = arr[2].decode('utf-8')
 
 
     tree = ET.ElementTree(root)
@@ -135,6 +135,7 @@ def checkLinkDatabase(link):
 if __name__ == "__main__":
     createNewRoot()
     parseCraigslistRSS('https://philadelphia.craigslist.org/zip/index.rss')  #craigslist free
-    #parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss');
+    #arseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss');
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?query=glass%20carboy&format=rss')  #glass carboy search
-
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=home%20brewing&sort=rel')  #home brewing search
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=chest%20freezer&sort=rel')  #chest freezer search

@@ -172,10 +172,15 @@ function locations() {
         return result;
     }
 
+    // currently only adds loot to database if it is less that 15 miles away
     this.addLootToDatabase = function() {
         console.log("In addLoot");
         for (loot of this.lootPile) {
-            loot.addToDatabase();
+            var lootdistance = parseFloat(loot.endpoint.distance.text)
+            console.log("current loot distance is " + lootdistance );
+            if (lootdistance < 20){
+                loot.addToDatabase();
+            }
         }
     }
 
@@ -202,16 +207,16 @@ Supporting Functions
 
 // really hacky(and just bad) way to complete the program which calls my script to send the email
 function executeBatchOnCompletion() {
-	$.ajax({
-		type: "POST",
-		url: "http://localhost/runBash.php",
-		async: true,
-		timeout: 50000,
-		data: {},
-		success: function(data){
-		console.log(data);
-		}
-	});
+    $.ajax({
+        type: "POST",
+        url: "http://localhost/runBash.php",
+        async: true,
+        timeout: 50000,
+        data: {},
+        success: function(data){
+        console.log(data);
+        }
+    });
 }
 
 // Sort loot based on time (in minutes) from origin
@@ -278,7 +283,7 @@ function checkRequestCount(a,b) {
             locList.logDistances();
             locList.clearDatabase();
             locList.addLootToDatabase();
-			executeBatchOnCompletion();
+            executeBatchOnCompletion();
     }
 }
 
@@ -323,9 +328,11 @@ function calcDistCallback(response, status) {
         console.log("Error in calcDistCallback!");
     }
     else {
-		var origins = response.originAddresses;
-		var destinations = response.destinationAddresses;
+        var origins = response.originAddresses;
+        var destinations = response.destinationAddresses;
         console.log("In calcDistCallback");
+        //todo -- save origins and destinations as properties of loot so that 
+        //it is possible to optionally add marker
         locList.addDistanceMatrixResults(response);
         addPlacesCalls++;
         checkRequestCount();
@@ -335,7 +342,7 @@ function calcDistCallback(response, status) {
       addMarker(origins[i], false);
       for (var j = 0; j < results.length; j++) {
         addMarker(destinations[j], true);
-		//sleep(100);
+        //sleep(100);
         //console.log(destinations[i][j]);
       }
     }
@@ -365,11 +372,12 @@ function addMarker(location, isDestination) {
     else {
       console.log('Geocode was not successful for the following reason: '
         + status);
-	  if (status == "OVER_QUERY_LIMIT") {
-		  console.log('Attempting to retry after 1 seconds');
-		  sleep(1000);
-		  addMarker(location, isDestination);
-	  }
+      if (status == "OVER_QUERY_LIMIT") {
+          var waitTime = 4000;
+          console.log("Attempting to retry after " + waitTime + " milliseconds");
+          sleep(waitTime);
+          addMarker(location, isDestination);
+      }
     }
   });
 }
