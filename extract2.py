@@ -8,7 +8,6 @@ import requests
 import re
 from bs4 import BeautifulSoup
 
-
 def parseCraigslistRSS(hyperlink):
     """
     From the given link, extract the coordinates and description of all items
@@ -73,7 +72,8 @@ def parseCraigslistRSS(hyperlink):
 
 
     ####  Generate XML document wtih coordinate data
-    root = ET.Element("root")
+    tree = ET.parse('coords.xml')
+    root = tree.getroot()
 
     for arr in coords:
         field = ET.SubElement(root,"loc")
@@ -99,6 +99,16 @@ def parseCraigslistRSS(hyperlink):
     tree = ET.ElementTree(root)
     tree.write("coords.xml")
 
+def createNewRoot():
+    """
+    This function is meant to be called at the beginning of extract2.py in order to creat the tree
+    which will eventaully overwrite the coords.xml file. Then subsequent calls to ____ will append
+    to the xml tree the results of the all rss feeds given to parse
+    """
+    root = ET.Element("root")
+    tree = ET.ElementTree(root)
+    tree.write("coords.xml")
+
 def checkLinkDatabase(link):
     """
     Checks an xml file to see whether this item has already been checked before, if not adds
@@ -116,14 +126,15 @@ def checkLinkDatabase(link):
     # Otherwise add loot to document if it was not found
     newLoot = ET.SubElement(root,'loot')
     newLoot.set("stuff",link)
-    root.append(newLoot)
+    #root.append(newLoot)  I think this was the cause of the duplicate entries
     print "New stuff found!"
     tree.write("previouslyDiscoveredLoot.xml")
     return found
 
 
 if __name__ == "__main__":
-    parseCraigslistRSS('https://philadelphia.craigslist.org/zip/index.rss');  #craigslist free
+    createNewRoot()
+    parseCraigslistRSS('https://philadelphia.craigslist.org/zip/index.rss')  #craigslist free
     #parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss');
-    #parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?query=glass%20carboy&format=rss');  #glass carboy search
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?query=glass%20carboy&format=rss')  #glass carboy search
 
