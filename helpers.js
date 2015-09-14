@@ -81,6 +81,11 @@ function loot(origin, endpoint, address, description, hyperlink) {
         });
     }
 
+    this.addToMap = function(){
+        addMarker(this.address, true);
+    }
+
+
 }
 
 function locations() {
@@ -176,10 +181,14 @@ function locations() {
     this.addLootToDatabase = function() {
         console.log("In addLoot");
         for (loot of this.lootPile) {
-            var lootdistance = parseFloat(loot.endpoint.distance.text)
+            var lootDistanceText = loot.endpoint.distance.text.split(" ");
+            // multiply by 1 to guarantee that the variable is recognized as an Int
+            var lootdistance = lootDistanceText[0] *1;
             console.log("current loot distance is " + lootdistance );
-            if (lootdistance < 20){
+            if (lootdistance < 25){
+                console.log("Adding loot to database " + lootdistance );
                 loot.addToDatabase();
+                loot.addToMap();
             }
         }
     }
@@ -331,20 +340,22 @@ function calcDistCallback(response, status) {
         var origins = response.originAddresses;
         var destinations = response.destinationAddresses;
         console.log("In calcDistCallback");
-        //todo -- save origins and destinations as properties of loot so that 
+        //todo -- save origins and destinations as properties of loot so that
         //it is possible to optionally add marker
         locList.addDistanceMatrixResults(response);
         addPlacesCalls++;
         checkRequestCount();
 
+    //only draw origin here. Destination wills be drawn later contingent on distance
+
     for (var i = 0; i < origins.length; i++) {
-      var results = response.rows[i].elements;
-      addMarker(origins[i], false);
-      for (var j = 0; j < results.length; j++) {
-        addMarker(destinations[j], true);
-        //sleep(100);
-        //console.log(destinations[i][j]);
-      }
+        var results = response.rows[i].elements;
+        addMarker(origins[i], false);
+    //  for (var j = 0; j < results.length; j++) {
+    //    addMarker(destinations[j], true);
+    //    //sleep(100);
+    //    //console.log(destinations[i][j]);
+    //}
     }
 
   }
