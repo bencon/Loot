@@ -15,18 +15,18 @@ This project also requires a localhost webserver and I have not yet committed an
 * sends an email with aggregate loot information
 <br>
 <br>
+
 ##### Todo:
 * Improve this readme
 * push required php and batch files for complete implementation
 * ....
 <br>
 <br>
+
 ##### Files:
 * extract2.py : run this file to extract google map coordinates from desired RSS link and put them in coords.xml
 * take2.html : Navigate to this page after running extract2.py for a graphical display of found items
 * helpers.js : the other half of take2.html which has most of the support gmaps 
 * coords.xml : output of extract2.py
 * previouslyDiscoveredLoot.xml : an xml database of already found loot so that items are not discovered multiple times, clear it if you do want them to be discovered again
-*
-*
 
