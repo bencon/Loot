@@ -1,3 +1,4 @@
+
 /*****************************************************
 *
 Main classes /data structures
@@ -55,7 +56,7 @@ function loot(origin, endpoint, address, description, hyperlink) {
             console.log("hyperlink undefined");
             return false;
         }
-        console.log("current loot successfully validated");
+        //console.log("current loot successfully validated");
         return true
     }
 
@@ -150,7 +151,6 @@ function locations() {
     this.logDistances = function() {
         for (loot of this.lootPile) {
             loot.logDistance();
-            //loot.toString();
         }
     }
 
@@ -184,11 +184,10 @@ function locations() {
             var lootDistanceText = loot.endpoint.distance.text.split(" ");
             // multiply by 1 to guarantee that the variable is recognized as an Int
             var lootdistance = lootDistanceText[0] *1;
-            console.log("current loot distance is " + lootdistance );
             if (lootdistance < 40){
-                console.log("Adding loot to database " + lootdistance );
+                //console.log("Adding loot to database " + lootdistance );
                 loot.addToDatabase();
-                loot.addToMap();
+                //loot.addToMap();
             }
         }
     }
@@ -282,31 +281,51 @@ function checkRequestCount(a,b) {
     if (addPlacesCalls == numberOfCallbacksNeeded) {
             console.log("number of Callbacks Needed acquired");
             locList.parsePlaces();
-            locList.printLoot();
+            //locList.printLoot();
             if (!locList.validateLoot()) {
                 console.log("Terminating because of failed loot validation");
                 return;
             }
             locList.sortPlaces();
-            console.log("sorting done");
+            //console.log("sorting done");
             locList.logDistances();
-            locList.clearDatabase();
-            locList.addLootToDatabase();
-			if (!blockBatchExecution) {
-				executeBatchOnCompletion();
-			}
+            if (!blockBatchExecution) {
+                locList.clearDatabase();
+                locList.addLootToDatabase();
+                executeBatchOnCompletion();
+            }
     }
 }
 
 function initialize() {
-  geocoder = new google.maps.Geocoder();
-  var opts = {
-    zoom: 10
-  };
-  map = new google.maps.Map(document.getElementById('map-canvas'), opts);
+    geocoder = new google.maps.Geocoder();
+    var opts = {
+        zoom: 10,
+        center: tempCenter
+    };
+    map = new google.maps.Map(document.getElementById('map-canvas'), opts);
+    //map.addListener('center_changed', mapCenterChangeEvent());
+
+    google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
+        console.log("Time to add markers??");
+        for (loot of locList.lootPile) {
+            //sleep(100);
+            var lootDistanceText = loot.endpoint.distance.text.split(" ");
+            // multiply by 1 to guarantee that the variable is recognized as an Int
+            var lootdistance = lootDistanceText[0] *1;
+            if (lootdistance < 40){
+                loot.addToMap();
+            }
+        }
+    });
+
     var outputDiv = document.getElementById('outputDiv');
     outputDiv.innerHTML = '';
-    deleteOverlays(); //probably want to add this back
+    outputDiv.addEventListener("click", function() {
+        console.log("You clicked OutputDiv");}
+    );
+    // Just deletes makers array. Not really any point of having this if there's no markers yet
+    deleteOverlays();
 
     locList.origCoordinates = destinations;
     locList.origDescriptions = descriptions;
@@ -317,18 +336,29 @@ function initialize() {
     }
 }
 
+// callback to do stuff when the GMap center changes
+function mapCenterChangeEvent() {
+    console.log("Center of map has changed");
+    //alert("Hi");
+}
+
+// callback for when map goes idle
+function waitForMapLoad() {
+
+}
+
 // Maximum of 25 origins or 25 destinations per request; and
 // At most 100 elements (origins times destinations) per request.
 function calculateDistances(input) {
-  var service = new google.maps.DistanceMatrixService();
-  service.getDistanceMatrix(
+    var service = new google.maps.DistanceMatrixService();
+    service.getDistanceMatrix(
     {
-      origins: origins,
-      destinations: input,
-      travelMode: google.maps.TravelMode.DRIVING,
-      unitSystem: google.maps.UnitSystem.IMPERIAL,
-      avoidHighways: false,
-      avoidTolls: false
+        origins: origins,
+        destinations: input,
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.IMPERIAL,
+        avoidHighways: false,
+        avoidTolls: false
     }, calcDistCallback);
 }
 
@@ -346,10 +376,9 @@ function calcDistCallback(response, status) {
         checkRequestCount();
 
     //only draw origin here. Destination wills be drawn later contingent on distance
-
     for (var i = 0; i < origins.length; i++) {
         var results = response.rows[i].elements;
-        addMarker(origins[i], false);
+        //addMarker(origins[i], false);
     }
 
   }
@@ -357,63 +386,63 @@ function calcDistCallback(response, status) {
 
 
 function addMarker(location, isDestination) {
-  var icon;
-  if (isDestination) {
-    icon = destinationIcon;
-  } else {
-    icon = originIcon;
-  }
-  geocoder.geocode({'address': location}, function(results, status) {
-    if (status == google.maps.GeocoderStatus.OK) {
-      bounds.extend(results[0].geometry.location);
-      map.fitBounds(bounds);
-      var marker = new google.maps.Marker({
-        map: map,
-        position: results[0].geometry.location,
-        icon: icon
-      });
-      markersArray.push(marker);
+    var icon;
+    if (isDestination) {
+        icon = destinationIcon;
+    } else {
+        icon = originIcon;
     }
-    else {
-      console.log('Geocode was not successful for the following reason: '
-        + status);
-      if (status == "OVER_QUERY_LIMIT") {
-          var waitTime = 4000;
-          console.log("Attempting to retry after " + waitTime + " milliseconds");
-          sleep(waitTime);
-          addMarker(location, isDestination);
-      }
-    }
-  });
+    geocoder.geocode({'address': location}, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+            bounds.extend(results[0].geometry.location);
+            map.fitBounds(bounds);
+            var marker = new google.maps.Marker({
+                map: map,
+                position: results[0].geometry.location,
+                icon: icon
+            });
+            markersArray.push(marker);
+        }
+        else {
+            console.log('Geocode was not successful for the following reason: '
+            + status);
+            if (status == "OVER_QUERY_LIMIT") {
+                var waitTime = 4000;
+                console.log("Attempting to retry after " + waitTime + " milliseconds");
+                sleep(waitTime);
+                addMarker(location, isDestination);
+            }
+        }
+    });
 }
 
 function deleteOverlays() {
-  for (var i = 0; i < markersArray.length; i++) {
-    markersArray[i].setMap(null);
-  }
-  markersArray = [];
+    for (var i = 0; i < markersArray.length; i++) {
+        markersArray[i].setMap(null);
+    }
+    markersArray = [];
 }
 
 function loadXMLDoc(filename)
 {
     if (window.XMLHttpRequest)
-        {
-            xhttp=new XMLHttpRequest();
-        }
+    {
+        xhttp=new XMLHttpRequest();
+    }
     else // code for IE5 and IE6
-        {
-            xhttp=new ActiveXObject("Microsoft.XMLHTTP");
-        }
-        xhttp.open("GET",filename,false);
-        xhttp.send();
+    {
+        xhttp=new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    xhttp.open("GET",filename,false);
+    xhttp.send();
     return xhttp.responseXML;
 }
 
 function sleep(milliseconds) {
-  var start = new Date().getTime();
-  for (var i = 0; i < 1e7; i++) {
-    if ((new Date().getTime() - start) > milliseconds){
-      break;
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+        if ((new Date().getTime() - start) > milliseconds){
+            break;
+        }
     }
-  }
 }
