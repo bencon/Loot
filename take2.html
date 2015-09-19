@@ -37,6 +37,13 @@
 
 
 <script>
+
+// variables used for debugging
+//todo : move this to a config file
+var selfImposedLimit = 6; //Only used during debugging to reduce number of google maps queries 
+var blockBatchExecution = 1; //1 if I don't want an email sent on page load, otherwise 0
+
+// global variables
 var map;
 var geocoder;
 var bounds = new google.maps.LatLngBounds();
@@ -87,7 +94,7 @@ function main() {
 		return;
 	}
 
-    while (i< coordinateNodes.length) {
+    while ((i< coordinateNodes.length) && (i < selfImposedLimit)) {
         var currentItem = [];
         xloc = (coordinateNodes[i].childNodes[0].childNodes[0].nodeValue);
         yloc = (coordinateNodes[i].childNodes[1].childNodes[0].nodeValue);
@@ -108,7 +115,7 @@ function main() {
     }
 	// continue previous array with alternate style destination (literal address rather than coordinates)
     j=0;
-    while (j< addressNodes.length) {
+    while ((j< addressNodes.length) && (j < selfImposedLimit)) {
         var currentItem = [];
         addstring = (addressNodes[j].childNodes[0].childNodes[0].nodeValue);
         console.log(addstring);
@@ -136,6 +143,7 @@ function main() {
 
     // Not only performs initialization, but sets off all the work of the application
     google.maps.event.addDomListener(window, 'load', initialize);
+	console.log("Done Initialization");
 }
 
 // execute main

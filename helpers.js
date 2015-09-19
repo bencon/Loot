@@ -185,7 +185,7 @@ function locations() {
             // multiply by 1 to guarantee that the variable is recognized as an Int
             var lootdistance = lootDistanceText[0] *1;
             console.log("current loot distance is " + lootdistance );
-            if (lootdistance < 25){
+            if (lootdistance < 40){
                 console.log("Adding loot to database " + lootdistance );
                 loot.addToDatabase();
                 loot.addToMap();
@@ -292,14 +292,15 @@ function checkRequestCount(a,b) {
             locList.logDistances();
             locList.clearDatabase();
             locList.addLootToDatabase();
-            executeBatchOnCompletion();
+			if (!blockBatchExecution) {
+				executeBatchOnCompletion();
+			}
     }
 }
 
 function initialize() {
   geocoder = new google.maps.Geocoder();
   var opts = {
-    center: unisys,
     zoom: 10
   };
   map = new google.maps.Map(document.getElementById('map-canvas'), opts);
@@ -340,8 +341,6 @@ function calcDistCallback(response, status) {
         var origins = response.originAddresses;
         var destinations = response.destinationAddresses;
         console.log("In calcDistCallback");
-        //todo -- save origins and destinations as properties of loot so that
-        //it is possible to optionally add marker
         locList.addDistanceMatrixResults(response);
         addPlacesCalls++;
         checkRequestCount();
@@ -351,11 +350,6 @@ function calcDistCallback(response, status) {
     for (var i = 0; i < origins.length; i++) {
         var results = response.rows[i].elements;
         addMarker(origins[i], false);
-    //  for (var j = 0; j < results.length; j++) {
-    //    addMarker(destinations[j], true);
-    //    //sleep(100);
-    //    //console.log(destinations[i][j]);
-    //}
     }
 
   }

@@ -18,8 +18,8 @@ def parseCraigslistRSS(hyperlink):
     print r.status_code
     print r.headers['content-type']
 
-    soup = BeautifulSoup(r.text, 'xml')
-    print (soup.prettify())
+    soup = BeautifulSoup(r.text.encode('utf-8'), 'xml')
+    print soup.prettify()
 
     #print soup.link
     results = []
@@ -139,3 +139,6 @@ if __name__ == "__main__":
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?query=glass%20carboy&format=rss')  #glass carboy search
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=home%20brewing&sort=rel')  #home brewing search
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=chest%20freezer&sort=rel')  #chest freezer search
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=53cm%20road%20bike') #road bike 53cm
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=54cm%20road%20bike') #road bike 54cm
+
