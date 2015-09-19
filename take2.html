@@ -40,17 +40,16 @@
 
 // variables used for debugging
 //todo : move this to a config file
-var selfImposedLimit = 3; //Only used during debugging to reduce number of google maps queries 
+var selfImposedLimit = 100; //Only used during debugging to reduce number of google maps queries
 var blockBatchExecution = 1; //1 if I don't want an email sent on page load, otherwise 0
+var drawRadius = 40;
 
 // global variables
 var map;
 var geocoder;
 var bounds = new google.maps.LatLngBounds();
-var markersArray = [];
 
 var pa = "847 Valley Forge Road Phoenixville, PA";
-var unisys = "2476 Swedesford Rd, Malvern, PA";
 var jersey = "New Jersey";
 var newark = 'Newark, DE';
 var york = 'Manhattan, NY';
@@ -61,7 +60,7 @@ var originIcon = 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=
 var xmlDoc = loadXMLDoc("coords.xml");
 var coordinateNodes = xmlDoc.getElementsByTagName("loc");
 var addressNodes = xmlDoc.getElementsByTagName("AddressString");
-var origins = [unisys];
+var origins = [tempCenter];
 var destinations = [];
 var descriptions = [];
 var hyperlinks = [];
@@ -73,6 +72,8 @@ var addPlacesCalls = 0; // Number of requests thus far performed
 
 // initialize and instance of the locations class
 var locList = new locations();
+var markersInfo = new mapMarkers();
+var markersArray = [];
 /*****************************************************
 *
 Main Application Code

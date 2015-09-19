@@ -4,6 +4,59 @@
 Main classes /data structures
 *
 *****************************************************/
+function mapMarkers() {
+    this.origin = 0;
+    this.destinations = []
+    this.destinationLength = 0;
+    this.currentMarker = 0; // used to index which markers have been drawn
+    this.previousCurrentMarker = 0; //used to continue if page has lost a map idle event
+    this.timeOutWait = 0;
+
+    this.pushOrigin = function(address) {
+        this.origin = address;
+    }
+
+    this.drawOrigin = function() {
+        if (this.origin != 0) {
+            addMarker(this.origin, false);
+        }
+        else {
+            console.log("Failed to draw Origin. No origin coordinates were probably ever given");
+        }
+    }
+
+    this.addToDestinations = function(address) {
+        this.destinations.push(address);
+        this.destinationLength = this.destinationLength +1;
+        console.log("destination length is now " + this.destinationLength);
+    }
+
+    this.mapNextMarker = function() {
+        if (this.currentMarker < this.destinationLength) {
+            addMarker(this.destinations[this.currentMarker], true);
+            this.currentMarker = this.currentMarker +1;
+        }
+        else {
+            console.log("Attempted to draw next marker, but all markers have been drawn");
+        }
+    }
+
+    // Make sure page is not stuck with leftover markers to be drawn
+    this.checkStatus = function() {
+        if (this.currentMarker < this.destinationLength) {
+            // This means that a second has gone by, and no new markers have been drawn even though there
+            // are still markers left to draw. Force the page to add another one.
+            if (this.currentMarker == this.previousCurrentMarker) {
+                if (this.timeOutWait >= 0) {
+                    this.mapNextMarker();
+                    this.timeOutWait =0;
+                }
+                this.timeOutWait++;
+            }
+        }
+        this.previousCurrentMarker = this.currentMarker;
+    }
+}
 
 function loot(origin, endpoint, address, description, hyperlink) {
     this.origin = origin;
@@ -82,11 +135,17 @@ function loot(origin, endpoint, address, description, hyperlink) {
         });
     }
 
+    // This function is being deprecated. Should now use addToMarkersList to handle drawing later
     this.addToMap = function(){
         addMarker(this.address, true);
     }
 
-
+    // Pushes destination to markersInfo class. This is an intermediate step before drawing the markers so that
+    // the page will be able to load one marker at a time rather than waiting for all the markers, then pushing
+    // them to the screen
+    this.addToMarkersList = function(){
+        markersInfo.addToDestinations(this.address);
+    }
 }
 
 function locations() {
@@ -184,7 +243,7 @@ function locations() {
             var lootDistanceText = loot.endpoint.distance.text.split(" ");
             // multiply by 1 to guarantee that the variable is recognized as an Int
             var lootdistance = lootDistanceText[0] *1;
-            if (lootdistance < 40){
+            if (lootdistance < drawRadius){
                 //console.log("Adding loot to database " + lootdistance );
                 loot.addToDatabase();
                 //loot.addToMap();
@@ -313,10 +372,11 @@ function initialize() {
             var lootDistanceText = loot.endpoint.distance.text.split(" ");
             // multiply by 1 to guarantee that the variable is recognized as an Int
             var lootdistance = lootDistanceText[0] *1;
-            if (lootdistance < 40){
-                loot.addToMap();
+            if (lootdistance < drawRadius){
+                loot.addToMarkersList();
             }
         }
+        initiateMarkersDraw();
     });
 
     var outputDiv = document.getElementById('outputDiv');
@@ -334,6 +394,21 @@ function initialize() {
     for (arr of locList.origCoordinates) {
         calculateDistances(arr);
     }
+}
+
+// Draws markers one by one waiting for page to load before attempting to draw the next
+function initiateMarkersDraw() {
+    console.log("Entered initiateMarkersDraw");
+    google.maps.event.addListener(map, 'idle', function(){
+       markersInfo.mapNextMarker();
+    });
+    //This draws the origin and sets of the drawing of the destinations
+    markersInfo.drawOrigin();
+
+    // Force page to continue drawing markers if 'idle' map event is not sufficient
+    setInterval(function() {
+        markersInfo.checkStatus()
+    }, 1000);
 }
 
 // callback to do stuff when the GMap center changes
@@ -378,13 +453,12 @@ function calcDistCallback(response, status) {
     //only draw origin here. Destination wills be drawn later contingent on distance
     for (var i = 0; i < origins.length; i++) {
         var results = response.rows[i].elements;
-        //addMarker(origins[i], false);
+        markersInfo.pushOrigin(origins[i]);
     }
-
   }
 }
 
-
+//todo: change this to not necessary redraw the page every time a new marker is added. This slows down load time
 function addMarker(location, isDestination) {
     var icon;
     if (isDestination) {
