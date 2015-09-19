@@ -408,7 +408,7 @@ function initiateMarkersDraw() {
     // Force page to continue drawing markers if 'idle' map event is not sufficient
     setInterval(function() {
         markersInfo.checkStatus()
-    }, 1000);
+    }, 140);
 }
 
 // callback to do stuff when the GMap center changes
@@ -468,8 +468,8 @@ function addMarker(location, isDestination) {
     }
     geocoder.geocode({'address': location}, function(results, status) {
         if (status == google.maps.GeocoderStatus.OK) {
-            bounds.extend(results[0].geometry.location);
-            map.fitBounds(bounds);
+            //bounds.extend(results[0].geometry.location);
+            //map.fitBounds(bounds);
             var marker = new google.maps.Marker({
                 map: map,
                 position: results[0].geometry.location,
@@ -481,8 +481,8 @@ function addMarker(location, isDestination) {
             console.log('Geocode was not successful for the following reason: '
             + status);
             if (status == "OVER_QUERY_LIMIT") {
-                var waitTime = 4000;
-                console.log("Attempting to retry after " + waitTime + " milliseconds");
+                var waitTime = 2000;
+                console.log("Markers drawn=" + markersArray.length + " Attempting to retry after " + waitTime + " milliseconds");
                 sleep(waitTime);
                 addMarker(location, isDestination);
             }
