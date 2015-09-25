@@ -28,12 +28,13 @@ function mapMarkers() {
     this.addToDestinations = function(address) {
         this.destinations.push(address);
         this.destinationLength = this.destinationLength +1;
-        console.log("destination length is now " + this.destinationLength);
+        //console.log("destination length is now " + this.destinationLength);
     }
 
     this.mapNextMarker = function() {
         if (this.currentMarker < this.destinationLength) {
             addMarker(this.destinations[this.currentMarker], true);
+            //console.log("destination is "+ this.destinations[this.currentMarker]);
             this.currentMarker = this.currentMarker +1;
         }
         else {
@@ -172,17 +173,27 @@ function locations() {
     // via addDistanceMatrixResults
     this.parsePlaces = function() {
         console.log("In parsePlaces");
+		//console.log("orig desciptions: " + this.origDescriptions);
         this.origin = this.distanceResults[0].originAddresses[0];
         for (var i = 0; i<addPlacesCalls; i++) {
+        //for (var i = addPlacesCalls-1; i>=0; i++) {
             if (typeof this.distanceResults[i] === 'undefined') {
                 console.log("invalid index " + i);
                 return;
             }
-            var tempName = this.distanceResults[i].destinationAddresses; //tempName used to be destinations
-            var results = this.distanceResults[i].rows[0].elements;
-            console.log("results length is " + results.length);
+			// Turns out results array gets pushed the the locations class in the reverse order of what is desired. Do some funky
+			// logic to go through the results arrays backwards to match the results with origCoordinates/origDescriptions
+            var tempName = this.distanceResults[addPlacesCalls -(i+1)].destinationAddresses; //tempName used to be destinations
+            var results = this.distanceResults[addPlacesCalls -(i+1)].rows[0].elements;
+            console.log("results length is " + results.length + "orig descriptions len is " + this.origDescriptions.length
+					+ " orig links length is " + this.origLinks.length);
+			//for (var n =0; n<this.origDescriptions.length; n++) {
+			//	console.log("subset descriptions len is " + this.origDescriptions[n].length);
+			//	console.log("subset links len is " + this.origLinks[n].length);
+			//}
             for (var j = 0; j < results.length; j++) {
                 this.lootPile.push(new loot(this.origin, results[j], tempName[j], this.origDescriptions[i][j], this.origLinks[i][j]));
+				console.log("desc i,j=" + i +"," + j+ " " + this.origDescriptions[i][j]);
                 var endpointAddressTuple = [];
                 endpointAddressTuple[0] = results[j];
                 endpointAddressTuple[1] = tempName[j];
@@ -342,6 +353,7 @@ function checkRequestCount(a,b) {
             locList.parsePlaces();
             //locList.printLoot();
             if (!locList.validateLoot()) {
+				//todo: fix this! Null description is causing a false(maybe?) termination
                 console.log("Terminating because of failed loot validation");
                 return;
             }
@@ -389,9 +401,11 @@ function initialize() {
 
     locList.origCoordinates = destinations;
     locList.origDescriptions = descriptions;
+	console.log(descriptions);
     locList.origLinks = hyperlinks;
 
     for (arr of locList.origCoordinates) {
+        console.log("logging destinations array" + arr);
         calculateDistances(arr);
     }
 }

@@ -87,16 +87,17 @@ function main() {
     descriptionArr = [];
     linkArr = [];
     i=0;
-    console.log("coordinate length is " + coordinateNodes.length);
+    console.log("coordinateNode length is " + coordinateNodes.length);
+    console.log("addressNode length is " + addressNodes.length);
 
     // If there are no coordinates to parse, no point continuing
-    if (coordinateNodes.length == 0) {
+    if (coordinateNodes.length == 0 && addressNodes.length == 0) {
         console.log("Returning due to insufficient coordinateNodes length");
         return;
     }
 
+	var lootDesc = ""
     while ((i< coordinateNodes.length) && (i < selfImposedLimit)) {
-        var currentItem = [];
         xloc = (coordinateNodes[i].childNodes[0].childNodes[0].nodeValue);
         yloc = (coordinateNodes[i].childNodes[1].childNodes[0].nodeValue);
         if (i % 25 == 24) {
@@ -110,17 +111,20 @@ function main() {
             numberOfCallbacksNeeded++;
         }
         coordArr.push(new google.maps.LatLng(xloc, yloc));
-        descriptionArr.push(coordinateNodes[i].childNodes[2].childNodes[0].nodeValue); //push description
+        lootDesc = (coordinateNodes[i].childNodes[2].childNodes[0].nodeValue); 
+		lootDesc.replace("[","<");
+		lootDesc.replace("]",">");
+        descriptionArr.push(lootDesc); //push description
+        console.log(coordinateNodes[i].childNodes[2].childNodes[0].nodeValue); //log description
         linkArr.push(coordinateNodes[i].childNodes[3].childNodes[0].nodeValue); //push hyperlink
         i++;
     }
     // continue previous array with alternate style destination (literal address rather than coordinates)
     j=0;
-    while ((j< addressNodes.length) && (j < selfImposedLimit)) {
-        var currentItem = [];
+	var first = true; //used to make sure we don't push a null array to the list
+    while ((j< addressNodes.length) && ((i+j) < selfImposedLimit)) {
         addstring = (addressNodes[j].childNodes[0].childNodes[0].nodeValue);
-        console.log(addstring);
-        if ((i+j) % 25 == 24) {
+        if (((i+j) % 25 == 24) && !first) {
             // For every subset array size of 24, append array to destinations and start new array
             destinations.push(coordArr);
             descriptions.push(descriptionArr);
@@ -130,8 +134,13 @@ function main() {
             linkArr = [];
             numberOfCallbacksNeeded++;
         }
+		var first = false;
         coordArr.push(addstring);
-        descriptionArr.push(addressNodes[j].childNodes[1].childNodes[0].nodeValue); //push description
+        lootDesc = (addressNodes[j].childNodes[1].childNodes[0].nodeValue); 
+		lootDesc.replace("[","<");
+		lootDesc.replace("]",">");
+        descriptionArr.push(lootDesc); //push description
+		//console.log(addressNodes[j].childNodes[1].childNodes[0].nodeValue); //log description
         linkArr.push(addressNodes[j].childNodes[2].childNodes[0].nodeValue); //push hyperlink
         j++;
     }
@@ -140,7 +149,12 @@ function main() {
     descriptions.push(descriptionArr);
     hyperlinks.push(linkArr);
     numberOfCallbacksNeeded++;
-
+	//console.log(descriptions);
+	for (arr of descriptions){
+		for (element of arr){
+			console.log(element);
+		}
+	}
 
     // Not only performs initialization, but sets off all the work of the application
     google.maps.event.addDomListener(window, 'load', initialize);
