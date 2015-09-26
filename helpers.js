@@ -76,7 +76,7 @@ function loot(origin, endpoint, address, description, hyperlink) {
                 + this.endpoint.duration.text + '<br>';
 //        outputDiv.innerHTML += this.description
 //                + '<br>';
-        console.log(this.description); //todo - make the description actually readable on the map
+        //console.log(this.description); //todo - make the description actually readable on the map
     }
 
     this.toString = function(){
@@ -131,7 +131,7 @@ function loot(origin, endpoint, address, description, hyperlink) {
             timeout: 50000,
             data: {origin: this.origin, address: this.address, distance: this.endpoint.distance.text, description: this.description, hyperlink: this.hyperlink},
             success: function(data){
-            console.log(data);
+            //console.log(data);
             }
         });
     }
@@ -161,10 +161,20 @@ function locations() {
     this.origin = 0;
 
     // first store responses that can then be parsed later after all data is acquired
+	// This uses a really hacky fix in the if-else statment in order to properly order
+	// responses pushed asynchronously via callback. A better solution needs to be 
+	// found in order to handle more than 47 loot items
     this.addDistanceMatrixResults = function(response) {
-        this.distanceResults[this.distanceResultsIndex] = response;
+        //this.distanceResults[this.distanceResultsIndex] = response;
+		if (response.rows[0].elements.length == 24) {
+			this.distanceResults.unshift(response);
+		}
+		else {
+			this.distanceResults.push(response);
+		}
+		console.log("response length is " + response.rows[0].elements.length);
         //console.log(response);
-        this.distanceResultsIndex++;
+        this.distanceResultsIndex++; //probably an unnecessary variable
         console.log("In addDistanceMatrixResults");
     }
 
@@ -183,17 +193,21 @@ function locations() {
             }
 			// Turns out results array gets pushed the the locations class in the reverse order of what is desired. Do some funky
 			// logic to go through the results arrays backwards to match the results with origCoordinates/origDescriptions
-            var tempName = this.distanceResults[addPlacesCalls -(i+1)].destinationAddresses; //tempName used to be destinations
-            var results = this.distanceResults[addPlacesCalls -(i+1)].rows[0].elements;
-            console.log("results length is " + results.length + "orig descriptions len is " + this.origDescriptions.length
-					+ " orig links length is " + this.origLinks.length);
+//            var tempName = this.distanceResults[addPlacesCalls -(i+1)].destinationAddresses; //tempName used to be destinations
+//            var results = this.distanceResults[addPlacesCalls -(i+1)].rows[0].elements;
+            var tempName = this.distanceResults[i].destinationAddresses; //tempName used to be destinations
+            var results = this.distanceResults[i].rows[0].elements;
+
+
+            //console.log("results length is " + results.length + "orig descriptions len is " + this.origDescriptions.length
+		   //			+ " orig links length is " + this.origLinks.length);
 			//for (var n =0; n<this.origDescriptions.length; n++) {
 			//	console.log("subset descriptions len is " + this.origDescriptions[n].length);
 			//	console.log("subset links len is " + this.origLinks[n].length);
 			//}
             for (var j = 0; j < results.length; j++) {
                 this.lootPile.push(new loot(this.origin, results[j], tempName[j], this.origDescriptions[i][j], this.origLinks[i][j]));
-				console.log("desc i,j=" + i +"," + j+ " " + this.origDescriptions[i][j]);
+				//console.log("desc i,j=" + i +"," + j+ " " + this.origDescriptions[i][j]);
                 var endpointAddressTuple = [];
                 endpointAddressTuple[0] = results[j];
                 endpointAddressTuple[1] = tempName[j];
@@ -361,6 +375,7 @@ function checkRequestCount(a,b) {
             //console.log("sorting done");
             locList.logDistances();
             if (!blockBatchExecution) {
+				console.log("Running batch script! Email should be sent out!")
                 locList.clearDatabase();
                 locList.addLootToDatabase();
                 executeBatchOnCompletion();
@@ -406,7 +421,8 @@ function initialize() {
 
     for (arr of locList.origCoordinates) {
         console.log("logging destinations array" + arr);
-        calculateDistances(arr);
+		var wait = {Value: 0}; //used as a means to fake passing by reference
+        calculateDistances(arr, wait);
     }
 }
 
@@ -438,7 +454,7 @@ function waitForMapLoad() {
 
 // Maximum of 25 origins or 25 destinations per request; and
 // At most 100 elements (origins times destinations) per request.
-function calculateDistances(input) {
+function calculateDistances(input, wait) {
     var service = new google.maps.DistanceMatrixService();
     service.getDistanceMatrix(
     {
@@ -465,6 +481,7 @@ function calcDistCallback(response, status) {
         checkRequestCount();
 
     //only draw origin here. Destination wills be drawn later contingent on distance
+	// todo: fix this. this can be called multiple times
     for (var i = 0; i < origins.length; i++) {
         var results = response.rows[i].elements;
         markersInfo.pushOrigin(origins[i]);
