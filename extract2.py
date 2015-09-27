@@ -6,6 +6,7 @@
 import xml.etree.cElementTree as ET
 import requests
 import re
+import string
 from bs4 import BeautifulSoup
 
 def parseCraigslistRSS(hyperlink):
@@ -18,7 +19,8 @@ def parseCraigslistRSS(hyperlink):
     print r.status_code
     print r.headers['content-type']
 
-    soup = BeautifulSoup(r.text.encode('utf-8'), 'xml')
+    onlyAscii = filter(lambda x: x in string.printable, r.text)
+    soup = BeautifulSoup(onlyAscii.encode('utf-8'), 'xml')
     print soup.prettify()
 
     #print soup.link
