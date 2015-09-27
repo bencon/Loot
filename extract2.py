@@ -6,6 +6,7 @@
 import xml.etree.cElementTree as ET
 import requests
 import re
+import string
 from bs4 import BeautifulSoup
 
 def parseCraigslistRSS(hyperlink):
@@ -18,7 +19,8 @@ def parseCraigslistRSS(hyperlink):
     print r.status_code
     print r.headers['content-type']
 
-    soup = BeautifulSoup(r.text.encode('utf-8'), 'xml')
+    onlyAscii = filter(lambda x: x in string.printable, r.text)
+    soup = BeautifulSoup(onlyAscii.encode('utf-8'), 'xml')
     print soup.prettify()
 
     #print soup.link
@@ -134,6 +136,7 @@ def checkLinkDatabase(link):
 
 if __name__ == "__main__":
     createNewRoot()
+    #todo: add range for each of the individual searches that I am willing to travel for each class of loot
     parseCraigslistRSS('https://philadelphia.craigslist.org/zip/index.rss')  #craigslist free
     #arseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss');
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?query=glass%20carboy&format=rss')  #glass carboy search
@@ -141,4 +144,9 @@ if __name__ == "__main__":
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=chest%20freezer&sort=rel')  #chest freezer search
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=53cm%20road%20bike') #road bike 53cm
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=54cm%20road%20bike') #road bike 54cm
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=coleman%20cooler') # coleman cooler
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=igloo%20cooler') # coleman cooler
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=48%20quart%20cooler') #48 quart cooler
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=50%20quart%20cooler') #48 quart cooler
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=60%20quart%20cooler') #48 quart cooler
 
