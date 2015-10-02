@@ -147,6 +147,6 @@ if __name__ == "__main__":
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=coleman%20cooler') # coleman cooler
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=igloo%20cooler') # coleman cooler
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=48%20quart%20cooler') #48 quart cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=50%20quart%20cooler') #48 quart cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=60%20quart%20cooler') #48 quart cooler
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=50%20quart%20cooler') #50 quart cooler
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=60%20quart%20cooler') #60 quart cooler
 
