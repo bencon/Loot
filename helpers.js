@@ -185,16 +185,16 @@ function locations() {
         //console.log("In parsePlaces");
         //console.log("orig desciptions: " + this.origDescriptions);
         this.origin = this.distanceResults[0].originAddresses[0];
-        for (var i = 0; i<addPlacesCalls; i++) {
-        //for (var i = addPlacesCalls-1; i>=0; i++) {
+        for (var i = 0; i<numberOfCallbacksDelivered; i++) {
+        //for (var i = numberOfCallbacksDelivered-1; i>=0; i++) {
             if (typeof this.distanceResults[i] === 'undefined') {
                 console.log("invalid index " + i);
                 return;
             }
             // Turns out results array gets pushed the the locations class in the reverse order of what is desired. Do some funky
             // logic to go through the results arrays backwards to match the results with origCoordinates/origDescriptions
-//            var tempName = this.distanceResults[addPlacesCalls -(i+1)].destinationAddresses; //tempName used to be destinations
-//            var results = this.distanceResults[addPlacesCalls -(i+1)].rows[0].elements;
+//            var tempName = this.distanceResults[numberOfCallbacksDelivered -(i+1)].destinationAddresses; //tempName used to be destinations
+//            var results = this.distanceResults[numberOfCallbacksDelivered -(i+1)].rows[0].elements;
             var tempName = this.distanceResults[i].destinationAddresses; //tempName used to be destinations
             var results = this.distanceResults[i].rows[0].elements;
 
@@ -347,28 +347,12 @@ function compareLootByDistance(a,b) {
     return 0;
 }
 
-
-// Unimplemented
-// When complete, this function will return a bool that says whether or not the given destination is within
-// A desired range. The callback function will be used to pass different criteria functions
-function checkWithinRange(callback) {
-}
-
 // Performs data manipulation once all data is returned by the Google API
-// todo: needs to be cleaned up significantly
 function checkRequestCount() {
-    console.log("addPlaces call count is " + addPlacesCalls + " vs needed " + numberOfCallbacksNeeded);
+    console.log("addPlaces call count is " + numberOfCallbacksDelivered + " vs needed " + numberOfCallbacksNeeded);
 
-    // Ideally, remove this from this function to the main code
-    // The reason that this appears to need to stay here at the moment is (I believe) the asynchronous nature
-    // of the Google Maps API. If this were moved to the end of the main code, it would be executed before any
-    // data is collected from Google.
-    if (addPlacesCalls == numberOfCallbacksNeeded) {
-            console.log("number of Callbacks Needed acquired");
             locList.parsePlaces();
-            //locList.printLoot();
             if (!locList.validateLoot()) {
-                //todo: fix this! Null description is causing a false(maybe?) termination
                 console.log("Terminating because of failed loot validation");
                 return;
             }
@@ -382,7 +366,6 @@ function checkRequestCount() {
                 locList.addLootToDatabase();
                 executeBatchOnCompletion();
             }
-    }
 }
 
 function initialize() {
@@ -393,20 +376,6 @@ function initialize() {
     };
     map = new google.maps.Map(document.getElementById('map-canvas'), opts);
     //map.addListener('center_changed', mapCenterChangeEvent());
-
-    //google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
-    //    console.log("Time to add markers??");
-    //    for (loot of locList.lootPile) {
-    //        //sleep(100);
-    //        var lootDistanceText = loot.endpoint.distance.text.split(" ");
-    //        // multiply by 1 to guarantee that the variable is recognized as an Int
-    //        var lootdistance = lootDistanceText[0] *1;
-    //        if (lootdistance < drawRadius){
-    //            loot.addToMarkersList();
-    //        }
-    //    }
-    //    initiateMarkersDraw();
-    //});
 
     var outputDiv = document.getElementById('outputDiv');
     outputDiv.innerHTML = '';
@@ -422,10 +391,6 @@ function initialize() {
     locList.origLinks = hyperlinks;
 
     processNextDistanceMatrix();
-    //for (arr of locList.origCoordinates) {
-    //    console.log("logging destinations array" + arr);
-    //    calculateDistances(arr);
-    //}
 }
 
 //This function gets called to check whether there is another array that should be processed by Google's Distance Matrix
@@ -497,20 +462,14 @@ function calcDistCallback(response, status) {
         console.log("Error in calcDistCallback!");
     }
     else {
-        //var origins = response.originAddresses;
-        //var destinations = response.destinationAddresses;
-        //console.log("In calcDistCallback");
         locList.addDistanceMatrixResults(response);
-        addPlacesCalls++;
         processNextDistanceMatrix();
 
-        //only draw origin here. Destination wills be drawn later contingent on distance
         // todo: fix this. this shouldn't be called multiple times
         markersInfo.pushOrigin(response.originAddresses[0]);
     }
 }
 
-//todo: change this to not necessary redraw the page every time a new marker is added. This slows down load time
 function addMarker(location, isDestination) {
     var icon;
     if (isDestination) {
