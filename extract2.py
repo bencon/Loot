@@ -9,6 +9,8 @@ import re
 import string
 from bs4 import BeautifulSoup
 
+checkPreviouslyDiscoveredLoot = 0; #set to 0 to re-discover everything
+
 def parseCraigslistRSS(hyperlink):
     """
     From the given link, extract the coordinates and description of all items
@@ -31,7 +33,7 @@ def parseCraigslistRSS(hyperlink):
         linkDescriptionArr = []
         info = ""
         for link in item.find('link'):
-            if (checkLinkDatabase(link.string)):
+            if (checkLinkDatabase(link.string) and checkPreviouslyDiscoveredLoot):
                 skipItem = True
                 break
             linkDescriptionArr.append(link.string)
@@ -145,8 +147,9 @@ if __name__ == "__main__":
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=53cm%20road%20bike') #road bike 53cm
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=54cm%20road%20bike') #road bike 54cm
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=coleman%20cooler') # coleman cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=igloo%20cooler') # coleman cooler
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=igloo%20cooler') # igloo cooler
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=48%20quart%20cooler') #48 quart cooler
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=50%20quart%20cooler') #50 quart cooler
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=60%20quart%20cooler') #60 quart cooler
+    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=belt%20sander') #belt sander
 
