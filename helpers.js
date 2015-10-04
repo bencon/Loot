@@ -166,23 +166,23 @@ function locations() {
     // found in order to handle more than 47 loot items
     this.addDistanceMatrixResults = function(response) {
         //this.distanceResults[this.distanceResultsIndex] = response;
-        if (response.rows[0].elements.length == 24) {
-            this.distanceResults.unshift(response);
-        }
-        else {
+    //    if (response.rows[0].elements.length == 24) {
+    //        this.distanceResults.unshift(response);
+    //    }
+    //    else {
             this.distanceResults.push(response);
-        }
-        console.log("response length is " + response.rows[0].elements.length);
+        //}
+        //console.log("response length is " + response.rows[0].elements.length);
         //console.log(response);
         this.distanceResultsIndex++; //probably an unnecessary variable
-        console.log("In addDistanceMatrixResults");
+        //console.log("In addDistanceMatrixResults");
     }
 
 
     // To be called to extract desired information from getDistanceMatrix reponse
     // via addDistanceMatrixResults
     this.parsePlaces = function() {
-        console.log("In parsePlaces");
+        //console.log("In parsePlaces");
         //console.log("orig desciptions: " + this.origDescriptions);
         this.origin = this.distanceResults[0].originAddresses[0];
         for (var i = 0; i<addPlacesCalls; i++) {
@@ -214,12 +214,12 @@ function locations() {
                 this.endpointAddressTupleArray[this.index] = endpointAddressTuple;
                 this.index = this.index + 1;
             }
-            console.log("End Destination loop");
+            //console.log("End Destination loop");
         }
     }
 
     this.sortPlaces = function() {
-        console.log("In sortPlaces");
+        //console.log("In sortPlaces");
         if (this.index > 0){
             this.lootPile.sort(compareLootByDistance);
         }
@@ -239,7 +239,7 @@ function locations() {
     }
 
     this.printLoot = function() {
-        console.log("In printLoot");
+        //console.log("In printLoot");
         for (loot of this.lootPile) {
             console.log(loot.toString());
         }
@@ -247,7 +247,7 @@ function locations() {
 
     this.validateLoot = function() {
         result = true;
-        console.log("In validateLoot");
+        //console.log("In validateLoot");
         for (loot of this.lootPile) {
             if (typeof loot === 'undefined') {
                 console.log("Loot undefined!!");
@@ -263,7 +263,7 @@ function locations() {
 
     // currently only adds loot to database if it is less that 15 miles away
     this.addLootToDatabase = function() {
-        console.log("In addLoot");
+        //console.log("In addLoot");
         for (loot of this.lootPile) {
             var lootDistanceText = loot.endpoint.distance.text.split(" ");
             // multiply by 1 to guarantee that the variable is recognized as an Int
@@ -355,7 +355,8 @@ function checkWithinRange(callback) {
 }
 
 // Performs data manipulation once all data is returned by the Google API
-function checkRequestCount(a,b) {
+// todo: needs to be cleaned up significantly
+function checkRequestCount() {
     console.log("addPlaces call count is " + addPlacesCalls + " vs needed " + numberOfCallbacksNeeded);
 
     // Ideally, remove this from this function to the main code
@@ -373,6 +374,7 @@ function checkRequestCount(a,b) {
             }
             locList.sortPlaces();
             //console.log("sorting done");
+            initiateMarkersDraw();
             locList.logDistances();
             if (!blockBatchExecution) {
                 console.log("Running batch script! Email should be sent out!")
@@ -392,19 +394,19 @@ function initialize() {
     map = new google.maps.Map(document.getElementById('map-canvas'), opts);
     //map.addListener('center_changed', mapCenterChangeEvent());
 
-    google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
-        console.log("Time to add markers??");
-        for (loot of locList.lootPile) {
-            //sleep(100);
-            var lootDistanceText = loot.endpoint.distance.text.split(" ");
-            // multiply by 1 to guarantee that the variable is recognized as an Int
-            var lootdistance = lootDistanceText[0] *1;
-            if (lootdistance < drawRadius){
-                loot.addToMarkersList();
-            }
-        }
-        initiateMarkersDraw();
-    });
+    //google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
+    //    console.log("Time to add markers??");
+    //    for (loot of locList.lootPile) {
+    //        //sleep(100);
+    //        var lootDistanceText = loot.endpoint.distance.text.split(" ");
+    //        // multiply by 1 to guarantee that the variable is recognized as an Int
+    //        var lootdistance = lootDistanceText[0] *1;
+    //        if (lootdistance < drawRadius){
+    //            loot.addToMarkersList();
+    //        }
+    //    }
+    //    initiateMarkersDraw();
+    //});
 
     var outputDiv = document.getElementById('outputDiv');
     outputDiv.innerHTML = '';
@@ -419,16 +421,38 @@ function initialize() {
     console.log(descriptions);
     locList.origLinks = hyperlinks;
 
-    for (arr of locList.origCoordinates) {
-        console.log("logging destinations array" + arr);
-        var wait = {Value: 0}; //used as a means to fake passing by reference
-        calculateDistances(arr, wait);
+    processNextDistanceMatrix();
+    //for (arr of locList.origCoordinates) {
+    //    console.log("logging destinations array" + arr);
+    //    calculateDistances(arr);
+    //}
+}
+
+//This function gets called to check whether there is another array that should be processed by Google's Distance Matrix
+function processNextDistanceMatrix(){
+    if (numberOfCallbacksDelivered < numberOfCallbacksNeeded) {
+        console.log("logging destinations array " + numberOfCallbacksDelivered);
+        calculateDistances(locList.origCoordinates[numberOfCallbacksDelivered]);
+        numberOfCallbacksDelivered++;
+    }
+    else {
+        checkRequestCount();
     }
 }
 
 // Draws markers one by one waiting for page to load before attempting to draw the next
 function initiateMarkersDraw() {
     console.log("Entered initiateMarkersDraw");
+
+    for (loot of locList.lootPile) {
+        var lootDistanceText = loot.endpoint.distance.text.split(" ");
+        // multiply by 1 to guarantee that the variable is recognized as an Int
+        var lootdistance = lootDistanceText[0] *1;
+        if (lootdistance < drawRadius){
+            loot.addToMarkersList();
+        }
+    }
+
     google.maps.event.addListener(map, 'idle', function(){
        markersInfo.mapNextMarker();
     });
@@ -454,7 +478,7 @@ function waitForMapLoad() {
 
 // Maximum of 25 origins or 25 destinations per request; and
 // At most 100 elements (origins times destinations) per request.
-function calculateDistances(input, wait) {
+function calculateDistances(input) {
     var service = new google.maps.DistanceMatrixService();
     service.getDistanceMatrix(
     {
@@ -475,15 +499,15 @@ function calcDistCallback(response, status) {
     else {
         //var origins = response.originAddresses;
         //var destinations = response.destinationAddresses;
-        console.log("In calcDistCallback");
+        //console.log("In calcDistCallback");
         locList.addDistanceMatrixResults(response);
         addPlacesCalls++;
-        checkRequestCount();
+        processNextDistanceMatrix();
 
-    //only draw origin here. Destination wills be drawn later contingent on distance
-    // todo: fix this. this shouldn't be called multiple times
-    markersInfo.pushOrigin(response.originAddresses[0]);
-  }
+        //only draw origin here. Destination wills be drawn later contingent on distance
+        // todo: fix this. this shouldn't be called multiple times
+        markersInfo.pushOrigin(response.originAddresses[0]);
+    }
 }
 
 //todo: change this to not necessary redraw the page every time a new marker is added. This slows down load time
