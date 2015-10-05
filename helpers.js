@@ -65,6 +65,7 @@ function loot(origin, endpoint, address, description, hyperlink) {
     this.address = address;
     this.description = description;
     this.hyperlink = hyperlink;
+    this.valid = 1;
 
     // Adds to the output list:
     //  1) Address
@@ -92,22 +93,37 @@ function loot(origin, endpoint, address, description, hyperlink) {
     this.validate = function(){
         if (typeof this.origin === 'undefined') {
             console.log("origin undefined");
+            invalidLoot++;
+            this.valid = 0;
             return false;
         }
         if (typeof this.endpoint === 'undefined') {
             console.log("endpoint undefined");
+            invalidLoot++;
+            this.valid = 0;
             return false;
+        }
+        if (typeof this.endpoint.distance === 'undefined') {
+            console.log("endpoint distance is undefined");
+            invalidLoot++;
+            this.valid = 0;
         }
         if (typeof this.address === 'undefined') {
             console.log("address undefined");
+            invalidLoot++;
+            this.valid = 0;
             return false;
         }
         if (typeof this.description === 'undefined') {
             console.log("description undefined");
+            invalidLoot++;
+            this.valid = 0;
             return false;
         }
         if (typeof this.hyperlink === 'undefined') {
             console.log("hyperlink undefined");
+            invalidLoot++;
+            this.valid = 0;
             return false;
         }
         //console.log("current loot successfully validated");
@@ -258,6 +274,14 @@ function locations() {
                 result = false;
             }
         }
+        // now get rid of any invalid loot from the loot pile so the program doesn't break
+        var newLootArr = [];
+        for (loot of this.lootPile) {
+            if (loot.valid){
+                newLootArr.push(loot);
+            }
+        }
+        this.lootPile = newLootArr;
         return result;
     }
 
@@ -360,6 +384,7 @@ function checkRequestCount() {
             //console.log("sorting done");
             initiateMarkersDraw();
             locList.logDistances();
+            console.log("Number of removed invalidLoot is " + invalidLoot);
             if (!blockBatchExecution) {
                 console.log("Running batch script! Email should be sent out!")
                 locList.clearDatabase();
@@ -408,11 +433,13 @@ function processNextDistanceMatrix(){
 // Draws markers one by one waiting for page to load before attempting to draw the next
 function initiateMarkersDraw() {
     console.log("Entered initiateMarkersDraw");
+    console.log("loot pile count is " + locList.lootPile.length);
 
     for (loot of locList.lootPile) {
         var lootDistanceText = loot.endpoint.distance.text.split(" ");
         // multiply by 1 to guarantee that the variable is recognized as an Int
         var lootdistance = lootDistanceText[0] *1;
+        //console.log("loot distance is " + lootdistance);
         if (lootdistance < drawRadius){
             loot.addToMarkersList();
         }
