@@ -115,7 +115,7 @@ function main() {
 		lootDesc.replace("[","<");
 		lootDesc.replace("]",">");
         descriptionArr.push(lootDesc); //push description
-        console.log(coordinateNodes[i].childNodes[2].childNodes[0].nodeValue); //log description
+        //console.log(coordinateNodes[i].childNodes[2].childNodes[0].nodeValue); //log description
         linkArr.push(coordinateNodes[i].childNodes[3].childNodes[0].nodeValue); //push hyperlink
         i++;
     }
@@ -150,11 +150,11 @@ function main() {
     hyperlinks.push(linkArr);
     numberOfCallbacksNeeded++;
 	//console.log(descriptions);
-	for (arr of descriptions){
-		for (element of arr){
-			console.log(element);
-		}
-	}
+	//for (arr of descriptions){
+	//	for (element of arr){
+	//		console.log(element);
+	//	}
+	//}
 
     // Not only performs initialization, but sets off all the work of the application
     google.maps.event.addDomListener(window, 'load', initialize);
