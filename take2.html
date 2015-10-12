@@ -38,13 +38,20 @@
 
 <script>
 
+var uni = {lat: 40.0272256, lng: -75.4857716};
+var oldWilmy = {lat: 39.7755221, lng: -75.6616657};
+
 // variables used for debugging
 //todo : move this to a config file
 var selfImposedLimit = 100; //Only used during debugging to reduce number of google maps queries
-var blockBatchExecution = 0; //1 if I don't want an email sent on page load, otherwise 0
+var blockBatchExecution =0; //1 if I don't want an email sent on page load, otherwise 0
 var drawRadius = 40;
+var tempCenter = uni;
+var origins = [tempCenter];
+
 
 // global variables
+var invalidLoot = 0;
 var map;
 var geocoder;
 var bounds = new google.maps.LatLngBounds();
@@ -54,21 +61,21 @@ var jersey = "New Jersey";
 var newark = 'Newark, DE';
 var york = 'Manhattan, NY';
 var hockessin = 'Hockessin, DE';
-var tempCenter = {lat: 40.0272256, lng: -75.4857716};
-var destinationIcon = 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=D|FF0000|000000';
+var destinationIcon = 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=D|F00000|000000';
 var originIcon = 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=O|FFFF00|000000';
 var xmlDoc = loadXMLDoc("coords.xml");
 var coordinateNodes = xmlDoc.getElementsByTagName("loc");
 var addressNodes = xmlDoc.getElementsByTagName("AddressString");
-var origins = [tempCenter];
 var destinations = [];
 var descriptions = [];
 var hyperlinks = [];
 var xloc = 0;
 var yloc = 0;
 var numberOfCallbacksNeeded = 0; // The number of stages that the requests to the Google API are broken into
+var numberOfCallbacksDelivered = 0; // The number of stages that the requests that have been delivered
                                  // The limit imposed by Google appears to be 30 at a time
 var addPlacesCalls = 0; // Number of requests thus far performed
+var waitForCallback = 0; //wait for previous distanceMatrix callback to be executed before starting another query. This is because otherwise they appear to come back in an unpredictable order
 
 // initialize and instance of the locations class
 var locList = new locations();

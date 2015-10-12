@@ -65,6 +65,7 @@ function loot(origin, endpoint, address, description, hyperlink) {
     this.address = address;
     this.description = description;
     this.hyperlink = hyperlink;
+    this.valid = 1;
 
     // Adds to the output list:
     //  1) Address
@@ -92,22 +93,37 @@ function loot(origin, endpoint, address, description, hyperlink) {
     this.validate = function(){
         if (typeof this.origin === 'undefined') {
             console.log("origin undefined");
+            invalidLoot++;
+            this.valid = 0;
             return false;
         }
         if (typeof this.endpoint === 'undefined') {
             console.log("endpoint undefined");
+            invalidLoot++;
+            this.valid = 0;
             return false;
+        }
+        if (typeof this.endpoint.distance === 'undefined') {
+            console.log("endpoint distance is undefined");
+            invalidLoot++;
+            this.valid = 0;
         }
         if (typeof this.address === 'undefined') {
             console.log("address undefined");
+            invalidLoot++;
+            this.valid = 0;
             return false;
         }
         if (typeof this.description === 'undefined') {
             console.log("description undefined");
+            invalidLoot++;
+            this.valid = 0;
             return false;
         }
         if (typeof this.hyperlink === 'undefined') {
             console.log("hyperlink undefined");
+            invalidLoot++;
+            this.valid = 0;
             return false;
         }
         //console.log("current loot successfully validated");
@@ -161,65 +177,65 @@ function locations() {
     this.origin = 0;
 
     // first store responses that can then be parsed later after all data is acquired
-	// This uses a really hacky fix in the if-else statment in order to properly order
-	// responses pushed asynchronously via callback. A better solution needs to be 
-	// found in order to handle more than 47 loot items
+    // This uses a really hacky fix in the if-else statment in order to properly order
+    // responses pushed asynchronously via callback. A better solution needs to be 
+    // found in order to handle more than 47 loot items
     this.addDistanceMatrixResults = function(response) {
         //this.distanceResults[this.distanceResultsIndex] = response;
-		if (response.rows[0].elements.length == 24) {
-			this.distanceResults.unshift(response);
-		}
-		else {
-			this.distanceResults.push(response);
-		}
-		console.log("response length is " + response.rows[0].elements.length);
+    //    if (response.rows[0].elements.length == 24) {
+    //        this.distanceResults.unshift(response);
+    //    }
+    //    else {
+            this.distanceResults.push(response);
+        //}
+        //console.log("response length is " + response.rows[0].elements.length);
         //console.log(response);
         this.distanceResultsIndex++; //probably an unnecessary variable
-        console.log("In addDistanceMatrixResults");
+        //console.log("In addDistanceMatrixResults");
     }
 
 
     // To be called to extract desired information from getDistanceMatrix reponse
     // via addDistanceMatrixResults
     this.parsePlaces = function() {
-        console.log("In parsePlaces");
-		//console.log("orig desciptions: " + this.origDescriptions);
+        //console.log("In parsePlaces");
+        //console.log("orig desciptions: " + this.origDescriptions);
         this.origin = this.distanceResults[0].originAddresses[0];
-        for (var i = 0; i<addPlacesCalls; i++) {
-        //for (var i = addPlacesCalls-1; i>=0; i++) {
+        for (var i = 0; i<numberOfCallbacksDelivered; i++) {
+        //for (var i = numberOfCallbacksDelivered-1; i>=0; i++) {
             if (typeof this.distanceResults[i] === 'undefined') {
                 console.log("invalid index " + i);
                 return;
             }
-			// Turns out results array gets pushed the the locations class in the reverse order of what is desired. Do some funky
-			// logic to go through the results arrays backwards to match the results with origCoordinates/origDescriptions
-//            var tempName = this.distanceResults[addPlacesCalls -(i+1)].destinationAddresses; //tempName used to be destinations
-//            var results = this.distanceResults[addPlacesCalls -(i+1)].rows[0].elements;
+            // Turns out results array gets pushed the the locations class in the reverse order of what is desired. Do some funky
+            // logic to go through the results arrays backwards to match the results with origCoordinates/origDescriptions
+//            var tempName = this.distanceResults[numberOfCallbacksDelivered -(i+1)].destinationAddresses; //tempName used to be destinations
+//            var results = this.distanceResults[numberOfCallbacksDelivered -(i+1)].rows[0].elements;
             var tempName = this.distanceResults[i].destinationAddresses; //tempName used to be destinations
             var results = this.distanceResults[i].rows[0].elements;
 
 
             //console.log("results length is " + results.length + "orig descriptions len is " + this.origDescriptions.length
-		   //			+ " orig links length is " + this.origLinks.length);
-			//for (var n =0; n<this.origDescriptions.length; n++) {
-			//	console.log("subset descriptions len is " + this.origDescriptions[n].length);
-			//	console.log("subset links len is " + this.origLinks[n].length);
-			//}
+           //           + " orig links length is " + this.origLinks.length);
+            //for (var n =0; n<this.origDescriptions.length; n++) {
+            //  console.log("subset descriptions len is " + this.origDescriptions[n].length);
+            //  console.log("subset links len is " + this.origLinks[n].length);
+            //}
             for (var j = 0; j < results.length; j++) {
                 this.lootPile.push(new loot(this.origin, results[j], tempName[j], this.origDescriptions[i][j], this.origLinks[i][j]));
-				//console.log("desc i,j=" + i +"," + j+ " " + this.origDescriptions[i][j]);
+                //console.log("desc i,j=" + i +"," + j+ " " + this.origDescriptions[i][j]);
                 var endpointAddressTuple = [];
                 endpointAddressTuple[0] = results[j];
                 endpointAddressTuple[1] = tempName[j];
                 this.endpointAddressTupleArray[this.index] = endpointAddressTuple;
                 this.index = this.index + 1;
             }
-            console.log("End Destination loop");
+            //console.log("End Destination loop");
         }
     }
 
     this.sortPlaces = function() {
-        console.log("In sortPlaces");
+        //console.log("In sortPlaces");
         if (this.index > 0){
             this.lootPile.sort(compareLootByDistance);
         }
@@ -239,7 +255,7 @@ function locations() {
     }
 
     this.printLoot = function() {
-        console.log("In printLoot");
+        //console.log("In printLoot");
         for (loot of this.lootPile) {
             console.log(loot.toString());
         }
@@ -247,7 +263,7 @@ function locations() {
 
     this.validateLoot = function() {
         result = true;
-        console.log("In validateLoot");
+        //console.log("In validateLoot");
         for (loot of this.lootPile) {
             if (typeof loot === 'undefined') {
                 console.log("Loot undefined!!");
@@ -258,12 +274,20 @@ function locations() {
                 result = false;
             }
         }
+        // now get rid of any invalid loot from the loot pile so the program doesn't break
+        var newLootArr = [];
+        for (loot of this.lootPile) {
+            if (loot.valid){
+                newLootArr.push(loot);
+            }
+        }
+        this.lootPile = newLootArr;
         return result;
     }
 
     // currently only adds loot to database if it is less that 15 miles away
     this.addLootToDatabase = function() {
-        console.log("In addLoot");
+        //console.log("In addLoot");
         for (loot of this.lootPile) {
             var lootDistanceText = loot.endpoint.distance.text.split(" ");
             // multiply by 1 to guarantee that the variable is recognized as an Int
@@ -347,40 +371,26 @@ function compareLootByDistance(a,b) {
     return 0;
 }
 
-
-// Unimplemented
-// When complete, this function will return a bool that says whether or not the given destination is within
-// A desired range. The callback function will be used to pass different criteria functions
-function checkWithinRange(callback) {
-}
-
 // Performs data manipulation once all data is returned by the Google API
-function checkRequestCount(a,b) {
-    console.log("addPlaces call count is " + addPlacesCalls + " vs needed " + numberOfCallbacksNeeded);
+function checkRequestCount() {
+    console.log("addPlaces call count is " + numberOfCallbacksDelivered + " vs needed " + numberOfCallbacksNeeded);
 
-    // Ideally, remove this from this function to the main code
-    // The reason that this appears to need to stay here at the moment is (I believe) the asynchronous nature
-    // of the Google Maps API. If this were moved to the end of the main code, it would be executed before any
-    // data is collected from Google.
-    if (addPlacesCalls == numberOfCallbacksNeeded) {
-            console.log("number of Callbacks Needed acquired");
             locList.parsePlaces();
-            //locList.printLoot();
             if (!locList.validateLoot()) {
-				//todo: fix this! Null description is causing a false(maybe?) termination
                 console.log("Terminating because of failed loot validation");
                 return;
             }
             locList.sortPlaces();
             //console.log("sorting done");
+            initiateMarkersDraw();
             locList.logDistances();
+            console.log("Number of removed invalidLoot is " + invalidLoot);
             if (!blockBatchExecution) {
-				console.log("Running batch script! Email should be sent out!")
+                console.log("Running batch script! Email should be sent out!")
                 locList.clearDatabase();
                 locList.addLootToDatabase();
                 executeBatchOnCompletion();
             }
-    }
 }
 
 function initialize() {
@@ -392,20 +402,6 @@ function initialize() {
     map = new google.maps.Map(document.getElementById('map-canvas'), opts);
     //map.addListener('center_changed', mapCenterChangeEvent());
 
-    google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
-        console.log("Time to add markers??");
-        for (loot of locList.lootPile) {
-            //sleep(100);
-            var lootDistanceText = loot.endpoint.distance.text.split(" ");
-            // multiply by 1 to guarantee that the variable is recognized as an Int
-            var lootdistance = lootDistanceText[0] *1;
-            if (lootdistance < drawRadius){
-                loot.addToMarkersList();
-            }
-        }
-        initiateMarkersDraw();
-    });
-
     var outputDiv = document.getElementById('outputDiv');
     outputDiv.innerHTML = '';
     outputDiv.addEventListener("click", function() {
@@ -416,19 +412,39 @@ function initialize() {
 
     locList.origCoordinates = destinations;
     locList.origDescriptions = descriptions;
-	console.log(descriptions);
+    console.log(descriptions);
     locList.origLinks = hyperlinks;
 
-    for (arr of locList.origCoordinates) {
-        console.log("logging destinations array" + arr);
-		var wait = {Value: 0}; //used as a means to fake passing by reference
-        calculateDistances(arr, wait);
+    processNextDistanceMatrix();
+}
+
+//This function gets called to check whether there is another array that should be processed by Google's Distance Matrix
+function processNextDistanceMatrix(){
+    if (numberOfCallbacksDelivered < numberOfCallbacksNeeded) {
+        console.log("logging destinations array " + numberOfCallbacksDelivered);
+        calculateDistances(locList.origCoordinates[numberOfCallbacksDelivered]);
+        numberOfCallbacksDelivered++;
+    }
+    else {
+        checkRequestCount();
     }
 }
 
 // Draws markers one by one waiting for page to load before attempting to draw the next
 function initiateMarkersDraw() {
     console.log("Entered initiateMarkersDraw");
+    console.log("loot pile count is " + locList.lootPile.length);
+
+    for (loot of locList.lootPile) {
+        var lootDistanceText = loot.endpoint.distance.text.split(" ");
+        // multiply by 1 to guarantee that the variable is recognized as an Int
+        var lootdistance = lootDistanceText[0] *1;
+        //console.log("loot distance is " + lootdistance);
+        if (lootdistance < drawRadius){
+            loot.addToMarkersList();
+        }
+    }
+
     google.maps.event.addListener(map, 'idle', function(){
        markersInfo.mapNextMarker();
     });
@@ -454,7 +470,7 @@ function waitForMapLoad() {
 
 // Maximum of 25 origins or 25 destinations per request; and
 // At most 100 elements (origins times destinations) per request.
-function calculateDistances(input, wait) {
+function calculateDistances(input) {
     var service = new google.maps.DistanceMatrixService();
     service.getDistanceMatrix(
     {
@@ -473,23 +489,14 @@ function calcDistCallback(response, status) {
         console.log("Error in calcDistCallback!");
     }
     else {
-        var origins = response.originAddresses;
-        var destinations = response.destinationAddresses;
-        console.log("In calcDistCallback");
         locList.addDistanceMatrixResults(response);
-        addPlacesCalls++;
-        checkRequestCount();
+        processNextDistanceMatrix();
 
-    //only draw origin here. Destination wills be drawn later contingent on distance
-	// todo: fix this. this can be called multiple times
-    for (var i = 0; i < origins.length; i++) {
-        var results = response.rows[i].elements;
-        markersInfo.pushOrigin(origins[i]);
+        // todo: fix this. this shouldn't be called multiple times
+        markersInfo.pushOrigin(response.originAddresses[0]);
     }
-  }
 }
 
-//todo: change this to not necessary redraw the page every time a new marker is added. This slows down load time
 function addMarker(location, isDestination) {
     var icon;
     if (isDestination) {
