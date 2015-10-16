@@ -7,9 +7,11 @@ import xml.etree.cElementTree as ET
 import requests
 import re
 import string
+import os
 from bs4 import BeautifulSoup
 
 checkPreviouslyDiscoveredLoot = 1; #set to 0 to re-discover everything
+relativePath = os.path.dirname(os.path.realpath(__file__))
 
 def parseCraigslistRSS(hyperlink, debugFile):
     """
@@ -76,7 +78,7 @@ def parseCraigslistRSS(hyperlink, debugFile):
 
 
     ####  Generate XML document wtih coordinate data
-    tree = ET.parse('coords.xml')
+    tree = ET.parse(relativePath + "/coords.xml")
     root = tree.getroot()
 
     for arr in coords:
@@ -101,7 +103,7 @@ def parseCraigslistRSS(hyperlink, debugFile):
 
 
     tree = ET.ElementTree(root)
-    tree.write("coords.xml")
+    tree.write(relativePath + "/coords.xml")
 
 def createNewRoot():
     """
@@ -111,7 +113,7 @@ def createNewRoot():
     """
     root = ET.Element("root")
     tree = ET.ElementTree(root)
-    tree.write("coords.xml")
+    tree.write(relativePath + "/coords.xml")
 
 def checkLinkDatabase(link):
     """
@@ -120,7 +122,7 @@ def checkLinkDatabase(link):
     Will eventually be used to block announcements of new items
     """
     found = False
-    tree = ET.parse('previouslyDiscoveredLoot.xml')
+    tree = ET.parse(relativePath +"/previouslyDiscoveredLoot.xml")
     root = tree.getroot()
     for loot in root.findall('loot'):
         if (loot.get('stuff') == link):
@@ -132,7 +134,7 @@ def checkLinkDatabase(link):
     newLoot.set("stuff",link)
     #root.append(newLoot)  I think this was the cause of the duplicate entries
     print "New stuff found!"
-    tree.write("previouslyDiscoveredLoot.xml")
+    tree.write(relativePath +"/previouslyDiscoveredLoot.xml")
     return found
 
 
