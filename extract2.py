@@ -10,7 +10,7 @@ import string
 import os
 from bs4 import BeautifulSoup
 
-checkPreviouslyDiscoveredLoot = 1; #set to 0 to re-discover everything
+checkPreviouslyDiscoveredLoot = 0; #set to 0 to re-discover everything
 relativePath = os.path.dirname(os.path.realpath(__file__))
 
 def parseCraigslistRSS(hyperlink, debugFile):
@@ -34,6 +34,7 @@ def parseCraigslistRSS(hyperlink, debugFile):
         skipItem = False
         linkDescriptionArr = []
         info = ""
+        tempLoc = ""
         for link in item.find('link'):
             if (checkLinkDatabase(link.string) and checkPreviouslyDiscoveredLoot):
                 skipItem = True
@@ -43,23 +44,28 @@ def parseCraigslistRSS(hyperlink, debugFile):
         if (skipItem):
             continue
         for title in item.find("title"):
-            info += str(title.encode('utf-8'))
-            #print(info,file=titleFile)
-            #debugFile.write(info + "\n")
+            fullTitle = str(title.encode('utf-8'))
+            info += fullTitle
+            a = re.search('\((.*?)\)',fullTitle)
+            if (a):
+                tempLoc = a.group(1)
         for description in item.find("description"):
             info += str(description.encode('utf-8'))
         info = info.replace('\n', ' ').replace('\r', '')
         linkDescriptionArr.append(info)
+        linkDescriptionArr.append(tempLoc)
         results.append(linkDescriptionArr)
 
     coords=[]
     addresses=[]
+    potentialAddresses=[]
     for item in results:
         print "\r"
         print item[1]
         r = requests.get(item[0]) #item[0] is a link from the rss feed
         if (r.status_code == 200):
             newSoup = BeautifulSoup(r.text)
+            foundGCoords = False
             for link in newSoup.find_all('a'):
                 url = link.get('href')
                 if (url and "maps.google.com" in link.get('href')):
@@ -75,7 +81,11 @@ def parseCraigslistRSS(hyperlink, debugFile):
                         address = attempt2[1]
                         print address + "<------ SUCCESS V2"
                         addresses.append([address, item[1], item[0]])
-
+                        addresses.append([address, item[1], item[0]])
+            if (foundGCoords == False):
+                # item[2] is the location extracted from the title
+                if (item[2]):
+                    potentialAddresses.append([item[2], item[1], item[0]])
 
     ####  Generate XML document wtih coordinate data
     tree = ET.parse(relativePath + "/coords.xml")
@@ -101,6 +111,14 @@ def parseCraigslistRSS(hyperlink, debugFile):
         hyperlink = ET.SubElement(field, 'link')
         hyperlink.text = arr[2].decode('utf-8')
 
+    for arr in potentialAddresses:
+        field = ET.SubElement(root,"PotentialAddress")
+        addr = ET.SubElement(field,'addr')
+        description = ET.SubElement(field,'desc')
+        addr.text = (arr[0]).decode('utf-8')
+        description.text = arr[1].decode('utf-8')
+        hyperlink = ET.SubElement(field, 'link')
+        hyperlink.text = arr[2].decode('utf-8')
 
     tree = ET.ElementTree(root)
     tree.write(relativePath + "/coords.xml")
@@ -144,27 +162,27 @@ if __name__ == "__main__":
     #Philly
     parseCraigslistRSS('https://philadelphia.craigslist.org/zip/index.rss', titleFile)  #craigslist free
     parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?query=glass%20carboy&format=rss', titleFile)  #glass carboy search
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=home%20brewing&sort=rel', titleFile)  #home brewing search
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=chest%20freezer&sort=rel', titleFile)  #chest freezer search
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=53cm%20road%20bike', titleFile) #road bike 53cm
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=54cm%20road%20bike', titleFile) #road bike 54cm
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=coleman%20cooler', titleFile) # coleman cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=igloo%20cooler', titleFile) # igloo cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=48%20quart%20cooler', titleFile) #48 quart cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=50%20quart%20cooler', titleFile) #50 quart cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=60%20quart%20cooler', titleFile) #60 quart cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=belt%20sander', titleFile) #belt sander
-    #delaware
-    parseCraigslistRSS('https://delaware.craigslist.org/zip/index.rss', titleFile)  #craigslist free
-    parseCraigslistRSS('https://delaware.craigslist.org/search/sss?query=glass%20carboy&format=rss', titleFile)  #glass carboy search
-    parseCraigslistRSS('https://delaware.craigslist.org/search/sss?format=rss&query=home%20brewing&sort=rel', titleFile)  #home brewing search
-    parseCraigslistRSS('https://delaware.craigslist.org/search/sss?format=rss&query=chest%20freezer&sort=rel', titleFile)  #chest freezer search
-    parseCraigslistRSS('https://delaware.craigslist.org/search/bik?format=rss&query=53cm%20road%20bike', titleFile) #road bike 53cm
-    parseCraigslistRSS('https://delaware.craigslist.org/search/bik?format=rss&query=54cm%20road%20bike', titleFile) #road bike 54cm
-    parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=coleman%20cooler', titleFile) # coleman cooler
-    parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=igloo%20cooler', titleFile) # igloo cooler
-    parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=48%20quart%20cooler', titleFile) #48 quart cooler
-    parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=50%20quart%20cooler', titleFile) #50 quart cooler
-    parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=60%20quart%20cooler', titleFile) #60 quart cooler
-    parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=belt%20sander', titleFile) #belt sander
+    #parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=home%20brewing&sort=rel', titleFile)  #home brewing search
+    #parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=chest%20freezer&sort=rel', titleFile)  #chest freezer search
+    #parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=53cm%20road%20bike', titleFile) #road bike 53cm
+    #parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=54cm%20road%20bike', titleFile) #road bike 54cm
+    #parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=coleman%20cooler', titleFile) # coleman cooler
+    #parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=igloo%20cooler', titleFile) # igloo cooler
+    #parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=48%20quart%20cooler', titleFile) #48 quart cooler
+    #parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=50%20quart%20cooler', titleFile) #50 quart cooler
+    #parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=60%20quart%20cooler', titleFile) #60 quart cooler
+    #parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=belt%20sander', titleFile) #belt sander
+    ##delaware
+    #parseCraigslistRSS('https://delaware.craigslist.org/zip/index.rss', titleFile)  #craigslist free
+    #parseCraigslistRSS('https://delaware.craigslist.org/search/sss?query=glass%20carboy&format=rss', titleFile)  #glass carboy search
+    #parseCraigslistRSS('https://delaware.craigslist.org/search/sss?format=rss&query=home%20brewing&sort=rel', titleFile)  #home brewing search
+    #parseCraigslistRSS('https://delaware.craigslist.org/search/sss?format=rss&query=chest%20freezer&sort=rel', titleFile)  #chest freezer search
+    #parseCraigslistRSS('https://delaware.craigslist.org/search/bik?format=rss&query=53cm%20road%20bike', titleFile) #road bike 53cm
+    #parseCraigslistRSS('https://delaware.craigslist.org/search/bik?format=rss&query=54cm%20road%20bike', titleFile) #road bike 54cm
+    #parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=coleman%20cooler', titleFile) # coleman cooler
+    #parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=igloo%20cooler', titleFile) # igloo cooler
+    #parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=48%20quart%20cooler', titleFile) #48 quart cooler
+    #parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=50%20quart%20cooler', titleFile) #50 quart cooler
+    #parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=60%20quart%20cooler', titleFile) #60 quart cooler
+    #parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=belt%20sander', titleFile) #belt sander
     titleFile.close()
