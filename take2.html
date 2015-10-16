@@ -66,6 +66,7 @@ var originIcon = 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=
 var xmlDoc = loadXMLDoc("coords.xml");
 var coordinateNodes = xmlDoc.getElementsByTagName("loc");
 var addressNodes = xmlDoc.getElementsByTagName("AddressString");
+var potentialAddressNodes = xmlDoc.getElementsByTagName("PotentialAddress");
 var destinations = [];
 var descriptions = [];
 var hyperlinks = [];
@@ -151,17 +152,46 @@ function main() {
         linkArr.push(addressNodes[j].childNodes[2].childNodes[0].nodeValue); //push hyperlink
         j++;
     }
-    // finally push final non-full array
-    destinations.push(coordArr);
-    descriptions.push(descriptionArr);
-    hyperlinks.push(linkArr);
-    numberOfCallbacksNeeded++;
-	//console.log(descriptions);
-	//for (arr of descriptions){
-	//	for (element of arr){
-	//		console.log(element);
-	//	}
-	//}
+    // continue previous array with second alternate destination style:
+	// These contain addresses extracted from the loot title. Many of them are expected to be invalid
+	// and the rest are not trustable to precisely give the destination
+    k=0;
+	var first = true; //used to make sure we don't push a null array to the list
+    while ((k< potentialAddressNodes.length) && ((i+j+k) < selfImposedLimit)) {
+        addstring = (potentialAddressNodes[k].childNodes[0].childNodes[0].nodeValue);
+        if (((i+j+k) % 25 == 24) && !first) {
+            // For every subset array size of 24, append array to destinations and start new array
+            destinations.push(coordArr);
+            descriptions.push(descriptionArr);
+            hyperlinks.push(linkArr);
+            coordArr = [];
+            descriptionArr = [];
+            linkArr = [];
+            numberOfCallbacksNeeded++;
+        }
+		var first = false;
+        coordArr.push(addstring);
+        lootDesc = (potentialAddressNodes[k].childNodes[1].childNodes[0].nodeValue); 
+		lootDesc.replace("[","<");
+		lootDesc.replace("]",">");
+        descriptionArr.push(lootDesc); //push description
+		//console.log(potentialAddressNodes[k].childNodes[1].childNodes[0].nodeValue); //log description
+        linkArr.push(potentialAddressNodes[k].childNodes[2].childNodes[0].nodeValue); //push hyperlink
+        k++;
+    }
+    // finally push final non-full (but also greater than size 0) array 
+	if (coordArr.length > 0){
+		destinations.push(coordArr);
+		descriptions.push(descriptionArr);
+		hyperlinks.push(linkArr);
+		numberOfCallbacksNeeded++;
+		//console.log(descriptions);
+		//for (arr of descriptions){
+		//	for (element of arr){
+		//		console.log(element);
+		//	}
+		//}
+	}
 
     // Not only performs initialization, but sets off all the work of the application
     google.maps.event.addDomListener(window, 'load', initialize);
