@@ -8,10 +8,12 @@ import requests
 import re
 import string
 import os
+import sys
 from bs4 import BeautifulSoup
 
 checkPreviouslyDiscoveredLoot = 1; #set to 0 to re-discover everything
 relativePath = os.path.dirname(os.path.realpath(__file__))
+foundStuff = False
 
 def parseCraigslistRSS(hyperlink, debugFile):
     """
@@ -153,36 +155,59 @@ def checkLinkDatabase(link):
     #root.append(newLoot)  I think this was the cause of the duplicate entries
     print "New stuff found!"
     tree.write(relativePath +"/previouslyDiscoveredLoot.xml")
+    foundStuff = True
     return found
 
 
 if __name__ == "__main__":
     createNewRoot()
     titleFile = open("myTitles",'w')
-    #Philly
-    parseCraigslistRSS('https://philadelphia.craigslist.org/zip/index.rss', titleFile)  #craigslist free
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?query=glass%20carboy&format=rss', titleFile)  #glass carboy search
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=home%20brewing&sort=rel', titleFile)  #home brewing search
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=chest%20freezer&sort=rel', titleFile)  #chest freezer search
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=53cm%20road%20bike', titleFile) #road bike 53cm
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=54cm%20road%20bike', titleFile) #road bike 54cm
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=coleman%20cooler', titleFile) # coleman cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=igloo%20cooler', titleFile) # igloo cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=48%20quart%20cooler', titleFile) #48 quart cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=50%20quart%20cooler', titleFile) #50 quart cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=60%20quart%20cooler', titleFile) #60 quart cooler
-    parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=belt%20sander', titleFile) #belt sander
-    #delaware
-    parseCraigslistRSS('https://delaware.craigslist.org/zip/index.rss', titleFile)  #craigslist free
-    parseCraigslistRSS('https://delaware.craigslist.org/search/sss?query=glass%20carboy&format=rss', titleFile)  #glass carboy search
-    parseCraigslistRSS('https://delaware.craigslist.org/search/sss?format=rss&query=home%20brewing&sort=rel', titleFile)  #home brewing search
-    parseCraigslistRSS('https://delaware.craigslist.org/search/sss?format=rss&query=chest%20freezer&sort=rel', titleFile)  #chest freezer search
-    parseCraigslistRSS('https://delaware.craigslist.org/search/bik?format=rss&query=53cm%20road%20bike', titleFile) #road bike 53cm
-    parseCraigslistRSS('https://delaware.craigslist.org/search/bik?format=rss&query=54cm%20road%20bike', titleFile) #road bike 54cm
-    parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=coleman%20cooler', titleFile) # coleman cooler
-    parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=igloo%20cooler', titleFile) # igloo cooler
-    parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=48%20quart%20cooler', titleFile) #48 quart cooler
-    parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=50%20quart%20cooler', titleFile) #50 quart cooler
-    parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=60%20quart%20cooler', titleFile) #60 quart cooler
-    parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=belt%20sander', titleFile) #belt sander
+    if (len(sys.argv) != 2):
+        print "Wrong number of aruguments! Exiting extract2.py"
+        print "Number of args is " + str(len(sys.argv))
+        sys.exit(100)
+
+    elif (str(sys.argv[1] == "free")):
+        parseCraigslistRSS('https://philadelphia.craigslist.org/zip/index.rss', titleFile)  #craigslist free
+        parseCraigslistRSS('https://delaware.craigslist.org/zip/index.rss', titleFile)  #craigslist free
+
+        #Nothing new found. Return an error
+        if ((foundStuff == False) and checkPreviouslyDiscoveredLoot):
+            sys.exit(50)
+
+    elif (str(sys.argv[1] == "others")):
+        print str(sys.argv)
+        #Philly
+        parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?query=glass%20carboy&format=rss', titleFile)  #glass carboy search
+        parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=home%20brewing&sort=rel', titleFile)  #home brewing search
+        parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=chest%20freezer&sort=rel', titleFile)  #chest freezer search
+        parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=53cm%20road%20bike', titleFile) #road bike 53cm
+        parseCraigslistRSS('https://philadelphia.craigslist.org/search/bik?format=rss&query=54cm%20road%20bike', titleFile) #road bike 54cm
+        parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=coleman%20cooler', titleFile) # coleman cooler
+        parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=igloo%20cooler', titleFile) # igloo cooler
+        parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=48%20quart%20cooler', titleFile) #48 quart cooler
+        parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=50%20quart%20cooler', titleFile) #50 quart cooler
+        parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=60%20quart%20cooler', titleFile) #60 quart cooler
+        parseCraigslistRSS('https://philadelphia.craigslist.org/search/for?format=rss&query=belt%20sander', titleFile) #belt sander
+        #delaware
+        parseCraigslistRSS('https://delaware.craigslist.org/search/sss?query=glass%20carboy&format=rss', titleFile)  #glass carboy search
+        parseCraigslistRSS('https://delaware.craigslist.org/search/sss?format=rss&query=home%20brewing&sort=rel', titleFile)  #home brewing search
+        parseCraigslistRSS('https://delaware.craigslist.org/search/sss?format=rss&query=chest%20freezer&sort=rel', titleFile)  #chest freezer search
+        parseCraigslistRSS('https://delaware.craigslist.org/search/bik?format=rss&query=53cm%20road%20bike', titleFile) #road bike 53cm
+        parseCraigslistRSS('https://delaware.craigslist.org/search/bik?format=rss&query=54cm%20road%20bike', titleFile) #road bike 54cm
+        parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=coleman%20cooler', titleFile) # coleman cooler
+        parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=igloo%20cooler', titleFile) # igloo cooler
+        parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=48%20quart%20cooler', titleFile) #48 quart cooler
+        parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=50%20quart%20cooler', titleFile) #50 quart cooler
+        parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=60%20quart%20cooler', titleFile) #60 quart cooler
+        parseCraigslistRSS('https://delaware.craigslist.org/search/for?format=rss&query=belt%20sander', titleFile) #belt sander
+
+        #Nothing new found. Return an error
+        if ((foundStuff == False) and checkPreviouslyDiscoveredLoot):
+            sys.exit(50)
+
+    else:
+        sys.exit(100)
+        "Unexpected argument passed. Exiting extract2.py"
+
     titleFile.close()
