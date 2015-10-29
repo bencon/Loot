@@ -163,11 +163,11 @@ if __name__ == "__main__":
     createNewRoot()
     titleFile = open("myTitles",'w')
     if (len(sys.argv) != 2):
-        print "Wrong number of aruguments! Exiting extract2.py"
         print "Number of args is " + str(len(sys.argv))
+        print "Wrong number of aruguments! Exiting extract2.py"
         sys.exit(100)
 
-    elif (str(sys.argv[1] == "free")):
+    elif (str(sys.argv[1]) == "free"):
         parseCraigslistRSS('https://philadelphia.craigslist.org/zip/index.rss', titleFile)  #craigslist free
         parseCraigslistRSS('https://delaware.craigslist.org/zip/index.rss', titleFile)  #craigslist free
 
@@ -175,8 +175,7 @@ if __name__ == "__main__":
         if ((foundStuff == False) and checkPreviouslyDiscoveredLoot):
             sys.exit(50)
 
-    elif (str(sys.argv[1] == "others")):
-        print str(sys.argv)
+    elif (str(sys.argv[1]) == "others"):
         #Philly
         parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?query=glass%20carboy&format=rss', titleFile)  #glass carboy search
         parseCraigslistRSS('https://philadelphia.craigslist.org/search/sss?format=rss&query=home%20brewing&sort=rel', titleFile)  #home brewing search
@@ -207,7 +206,7 @@ if __name__ == "__main__":
             sys.exit(50)
 
     else:
+        print "Unexpected argument passed. Exiting extract2.py"
         sys.exit(75)
-        "Unexpected argument passed. Exiting extract2.py"
 
     titleFile.close()
