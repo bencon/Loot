@@ -175,6 +175,7 @@ if __name__ == "__main__":
         #Nothing new found. Return an error
         if ((foundStuff == False) and checkPreviouslyDiscoveredLoot):
             sys.exit(50)
+	print "Found stuff!"
 
     elif (str(sys.argv[1]) == "others"):
         #Philly
@@ -205,6 +206,7 @@ if __name__ == "__main__":
         #Nothing new found. Return an error
         if ((foundStuff == False) and checkPreviouslyDiscoveredLoot):
             sys.exit(50)
+	print "Found stuff!"
 
     else:
         print "Unexpected argument passed. Exiting extract2.py"
