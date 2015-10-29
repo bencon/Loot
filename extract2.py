@@ -207,7 +207,7 @@ if __name__ == "__main__":
             sys.exit(50)
 
     else:
-        sys.exit(100)
+        sys.exit(75)
         "Unexpected argument passed. Exiting extract2.py"
 
     titleFile.close()
