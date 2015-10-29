@@ -141,6 +141,7 @@ def checkLinkDatabase(link):
     the link to the database
     Will eventually be used to block announcements of new items
     """
+    global foundStuff
     found = False
     tree = ET.parse(relativePath +"/previouslyDiscoveredLoot.xml")
     root = tree.getroot()
