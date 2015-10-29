@@ -143,6 +143,7 @@ def checkLinkDatabase(link):
     """
     global foundStuff
     found = False
+    #fixme: need to check if file can be parsed! try/catch block?
     tree = ET.parse(relativePath +"/previouslyDiscoveredLoot.xml")
     root = tree.getroot()
     for loot in root.findall('loot'):
@@ -174,6 +175,7 @@ if __name__ == "__main__":
 
         #Nothing new found. Return an error
         if ((foundStuff == False) and checkPreviouslyDiscoveredLoot):
+	    print "exiting. No stuff found"
             sys.exit(50)
 	print "Found stuff!"
 
